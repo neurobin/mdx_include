@@ -1,0 +1,49 @@
+<p>This is a simple text </p>
+<pre><code>Including test1.md
+</code></pre>
+<p><strong>This is test1.md</strong></p>
+<pre><code>Including test2.md
+</code></pre>
+<p><strong>This is test2.md</strong></p>
+<pre><code>Including a remote content:
+</code></pre>
+<pre><code class="python"># -*- coding: utf-8 -*-
+
+# Settings
+from django.conf import settings
+
+
+settings.configure(
+    DEBUG=True,
+    SECRET_KEY='secretfoobar',
+    ROOT_URLCONF=__name__,
+    MIDDLEWARE_CLASSES=(
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    )
+)
+
+
+# Views
+from django.http import HttpResponse
+from django.conf.urls import url
+
+
+def index(request):
+    return HttpResponse('&lt;h1&gt;Hello Word&lt;/h1&gt;')
+
+# Routes
+urlpatterns = (
+    url(r'^$', index),
+)
+
+
+# RunServer
+if __name__ == '__main__':
+    from django.core.management import execute_from_command_line
+    import sys
+
+    execute_from_command_line(sys.argv)
+
+</code></pre>
