@@ -72,15 +72,15 @@ print(html)
 
 The following markdown:
 
-```md
-Including a gist:
-    
-```python
-{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
-```
 
-Writing the syntax literally: \{! file_path !} (You just escape it with a backslash. \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
-```
+    Including a gist:
+        
+    ```python
+    {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+    ```
+
+    Writing the syntax literally: \{! file_path !} (You just escape it with a backslash. \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
+
 
 will produce :
 
