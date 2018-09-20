@@ -1,14 +1,32 @@
 
 Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at your desired places. 
 
-This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities (except this one is non-recursive for now) with some extras.
+This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
+
+Inclusion for local file is by default recursive, for remote file non-recursive. You can change this behavior by passing your desired configuration. 
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
 # Syntax
 
-1. With explicit encoding: `{! file_path_or_url | encoding !}`
-2. Without explicit encoding: `{! file_path_or_url !}`
+General syntax: `{!recurs_state file_path_or_url | encoding !}`
+
+**The spaces are not necessary. They are just to make it look nice :) .**
+
+Examples:
+
+1. Simple: `{! file_path_or_url !}`
+2. With explicit encoding: `{! file_path_or_url | encoding !}`
+3. With recurs_state on: `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
+4. With recurs_state off: `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
+
+**You can escape it to get the literal. For example, `\{!- file_path_or_url !}` will give you literal `{!- file_path_or_url !}` and `\\\{!- file_path_or_url !}` will give you `\{!- file_path_or_url !}`**
+
+**You can change the syntax!!!**
+
+If you don't like the syntax you can change it through configuration. There might be some complications with the syntax `{!file!}`, for example, conflict with `markdown.extensions.attr_list`
+
+
 
 # Install
 
