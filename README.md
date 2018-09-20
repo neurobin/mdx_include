@@ -81,7 +81,7 @@ Config param | Default | Details
 `recurs_remote` | `False` | Whether the inclusions are recursive on remote files. Options are: `True`, `False` and `None`. `None` is a neutral value with negative default and overridable with recurs_state (e.g `{!+file!}`). `False` will permanently prevent recursion i.e you won't be able to override it with the recurs_state. `True` value is overridable with recurs_state (e.g `{!-file!}`).
 `syntax_left` | `\{!` | The left boundary of the syntax. (Used in regex, thus escaped `{`)
 `syntax_right` | `!\}` | The right boundary of the syntax. (Used in regex, thus escaped `}`)
-`syntax_delim` | `\\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`)
+`syntax_delim` | `\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`)
 `syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex)
 `syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex)
 
