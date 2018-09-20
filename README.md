@@ -3,7 +3,7 @@ Include extension for Python Markdown. It lets you include local or remote (down
 
 This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
 
-Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior by configuration. 
+Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration. 
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
@@ -11,16 +11,16 @@ Inclusion for local file is by default recursive and for remote file non-recursi
 
 General syntax: `{!recurs_state file_path_or_url | encoding !}`
 
-**The spaces are not necessary. They are just to make it look nice :) .**
+**The spaces are not necessary. They are just to make it look nice :) . No spaces allowd between `{!` and recurs_state**
 
-Examples:
+**Examples:**
 
-1. Simple: `{! file_path_or_url !}`
-2. With explicit encoding: `{! file_path_or_url | encoding !}`
-3. With recurs_state on: `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
-4. With recurs_state off: `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
+1. **Simple:** `{! file_path_or_url !}`
+2. **With explicit encoding:** `{! file_path_or_url | encoding !}`
+3. **With recurs_state on:** `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
+4. **With recurs_state off:** `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
 
-**You can escape it to get the literal. For example, `\{!- file_path_or_url !}` will give you literal `{!- file_path_or_url !}` and `\\\{!- file_path_or_url !}` will give you `\{!- file_path_or_url !}`**
+**You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`**
 
 ## You can change the syntax!!!
 
@@ -81,7 +81,7 @@ Config param | Default | Details
 `recurs_remote` | `False` | Whether the inclusions are recursive on remote files. Options are: `True`, `False` and `None`. `None` is a neutral value with negative default and overridable with recurs_state (e.g `{!+file!}`). `False` will permanently prevent recursion i.e you won't be able to override it with the recurs_state. `True` value is overridable with recurs_state (e.g `{!-file!}`).
 `syntax_left` | `\{!` | The left boundary of the syntax. (Used in regex, thus escaped `{`)
 `syntax_right` | `!\}` | The right boundary of the syntax. (Used in regex, thus escaped `}`)
-`syntax_delim` | `\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `|`)
+`syntax_delim` | `\\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`)
 `syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex)
 `syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex)
 
