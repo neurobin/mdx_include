@@ -27,26 +27,23 @@ try:
     from urllib.parse import urlunparse
     from urllib.request import build_opener
     from urllib.request import HTTPRedirectHandler
-    from urllib.error import HTTPError
-    from urllib.error import URLError
 except ImportError:
     # python 2
     from urlparse import urlparse
     from urlparse import urlunparse
     from urllib2 import HTTPRedirectHandler
     from urllib2 import build_opener
-    from urllib2 import HTTPError
-    from urllib2 import URLError
 from . import version
 
 __version__ = version.__version__
 
-INCLUDE_SYNTAX_RE = re.compile(r'\{!\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
+INCLUDE_SYNTAX_RE = re.compile(r'(?P<escape>\\)?\{!\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
 
 LOGGER_NAME = 'mdx_include' + __version__
 log = logging.getLogger(LOGGER_NAME)
 
 def encoding_exists(encoding):
+    """Check if an encoding is available in Python"""
     false_positives = set(["aliases"])
     found = set(name for imp, name, ispkg in pkgutil.iter_modules(encodings.__path__) if not ispkg)
     found.difference_update(false_positives)
@@ -61,18 +58,23 @@ def get_remote_content(url, encoding='utf-8'):
     """Follow redirect and return the content"""
     try:
         log.info("Downloading url: "+ url)
-        return build_opener(HTTPRedirectHandler).open(url).read().decode(encoding)
-    except (URLError, HTTPError) as err:
+        return build_opener(HTTPRedirectHandler).open(url).read().decode(encoding), True
+    except Exception as err:
+        # catching all exception, this will effectively return empty string
+        # and thus stip off the include syntax
         log.exception("E: Failed to download: " + url)
-        return ''
+        return '', False
 
 class IncludeExtension(markdown.Extension):
     """Include Extension class for markdown"""
 
     def __init__(self,  *args, **kwargs):
         self.config = {
-            'base_path': ['.', 'Base path from where relative paths are calculated'],
-            'encoding': ['utf-8', 'Encoding of the files.'],
+            'base_path': [ '.', 'Base path from where relative paths are calculated',],
+            'encoding': [ 'utf-8', 'Encoding of the files.', ],
+            'allow_local': [ True, 'Allow including local files.', ],
+            'allow_remote': [ True, 'Allow including remote files.', ],
+            'truncate_on_failure': [True, 'Truncate the include markdown if failed to get the content.'],
             }
         super(IncludeExtension, self).__init__(*args, **kwargs)
 
@@ -92,6 +94,9 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         super(IncludePreprocessor, self).__init__(md)
         self.base_path = config['base_path'][0]
         self.encoding = config['encoding'][0]
+        self.allow_local = config['allow_local'][0]
+        self.allow_remote = config['allow_remote'][0]
+        self.truncate_on_failure = config['truncate_on_failure'][0]
 
 
     def run(self, lines):
@@ -99,26 +104,30 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         for line in lines:
             i = i + 1
             ms = INCLUDE_SYNTAX_RE.finditer(line)
+            resl = ''
+            c = 0
             for m in ms:
-                if m:
-                    text = ''
-                    total_match = m.group(0)
-                    d = m.groupdict()
+                text = ''
+                stat = True
+                total_match = m.group(0)
+                d = m.groupdict()
+                escape = d.get('escape')
+                if not escape:
                     filename = d.get('path')
                     filename = os.path.expanduser(filename)
                     encoding = d.get('encoding')
                     if not encoding_exists(encoding):
+                        if encoding:
+                            log.warning("W: Wrong encoding specified (%s). Falling back to: %s" % (encoding, self.encoding,))
                         encoding = self.encoding
                         
                     urlo = urlparse(filename)
                     
-                    remote = False
-                    if urlo.netloc:
+                    if self.allow_remote and urlo.netloc:
                         # remote url
-                        remote = True
                         filename = urlunparse(urlo)
-                        text = get_remote_content(filename, encoding)
-                    else:
+                        text, stat = get_remote_content(filename, encoding)
+                    elif self.allow_local:
                         # local file
                         if not os.path.isabs(filename):
                             filename = os.path.normpath(os.path.join(self.base_path, filename))
@@ -126,11 +135,28 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                             with open(filename, 'r', encoding=encoding) as f:
                                 text = f.read()
                         except Exception as e:
-                            log.exception('E: Could not find file {}'.format((filename,)))
-                            # no modification will be made, not even stripping the syntax
-                            continue
-
-                    lines[i] = lines[i].replace(total_match, text)
+                            log.exception('E: Could not find file: {}'.format(filename,))
+                            # Do not break or continue, think of current offset, it must be
+                            # set to end offset after replacing the matched part
+                            stat = False
+                    else:
+                        # If allow_remote and allow_local both is false, then status is false
+                        # so that user still have the option to truncate or not, text is empty now.
+                        stat = False
+                else:
+                    # this one is escaped, gobble up the escape backslash
+                    text = total_match[1:]
+                
+                if not stat and not self.truncate_on_failure:
+                    # get content failed and user wants to retain the include markdown
+                    text = total_match
+                s, e = m.span()
+                resl = ''.join([resl, lines[i][c:s], text ])
+                # set the current offset to the end offset of this match
+                c = e
+            # All replacements are done, copy the rest of the string
+            resl = ''.join([resl, lines[i][c:]])
+            lines[i] = resl
         return lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
