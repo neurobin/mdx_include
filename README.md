@@ -1,7 +1,7 @@
 
 Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at your desired places. 
 
-This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
+This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities (except this one is non-recursive for now) with some extras.
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
