@@ -37,7 +37,7 @@ from . import version
 
 __version__ = version.__version__
 
-INCLUDE_SYNTAX_RE = re.compile(r'(?P<escape>\\)?\{!\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
+INCLUDE_SYNTAX_RE = re.compile(r'(?P<escape>\\)?\{!(?P<recursive>[+-])?\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
 
 logging.basicConfig()
 LOGGER_NAME = 'mdx_include-' + __version__
@@ -75,6 +75,8 @@ class IncludeExtension(markdown.Extension):
             'allow_local': [ True, 'Allow including local files.', ],
             'allow_remote': [ True, 'Allow including remote files.', ],
             'truncate_on_failure': [True, 'Truncate the include markdown if failed to get the content.'],
+            'recurs_local': [True, 'Whether the inclusion is recursive for local files.'],
+            'recurs_remote': [False, 'Whether the inclusion is recursive for remote files.'],
             }
         super(IncludeExtension, self).__init__(*args, **kwargs)
 
@@ -97,66 +99,88 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.allow_local = config['allow_local'][0]
         self.allow_remote = config['allow_remote'][0]
         self.truncate_on_failure = config['truncate_on_failure'][0]
+        self.recursive_local = config['recurs_local'][0]
+        self.recursive_remote = config['recurs_remote'][0]
 
+    def get_processed_line(self, line):
+        resl = ''
+        c = 0
+        ms = INCLUDE_SYNTAX_RE.finditer(line)
+        for m in ms:
+            text = ''
+            stat = True
+            total_match = m.group(0)
+            d = m.groupdict()
+            escape = d.get('escape')
+            if not escape:
+                filename = d.get('path')
+                filename = os.path.expanduser(filename)
+                encoding = d.get('encoding')
+                recurse_state = d.get('recursive')
+                if not encoding_exists(encoding):
+                    if encoding:
+                        log.warning("W: Wrong encoding specified (%s). Falling back to: %s" % (encoding, self.encoding,))
+                    encoding = self.encoding
+                    
+                urlo = urlparse(filename)
+                
+                if self.allow_remote and urlo.netloc:
+                    # remote url
+                    filename = urlunparse(urlo)
+                    text, stat = get_remote_content(filename, encoding)
+                    if stat:
+                        if self.recursive_remote:
+                            if recurse_state != '-':
+                                text = self.get_processed_line(text)
+                        elif self.recursive_remote is None:
+                            # it's in a neutral position, check recursive state
+                            if recurse_state == '+':
+                                text = self.get_processed_line(text)
+                elif self.allow_local:
+                    # local file
+                    if not os.path.isabs(filename):
+                        filename = os.path.normpath(os.path.join(self.base_path, filename))
+                    try:
+                        with open(filename, 'r', encoding=encoding) as f:
+                            text = f.read()
+                            if self.recursive_local:
+                                if recurse_state != '-':
+                                    text = self.get_processed_line(text)
+                            elif self.recursive_local is None:
+                                # it's in a neutral position, check recursive state
+                                if recurse_state == '+':
+                                    text = self.get_processed_line(text)
+                    except Exception as e:
+                        log.exception('E: Could not find file: {}'.format(filename,))
+                        # Do not break or continue, think of current offset, it must be
+                        # set to end offset after replacing the matched part
+                        stat = False
+                else:
+                    # If allow_remote and allow_local both is false, then status is false
+                    # so that user still have the option to truncate or not, text is empty now.
+                    stat = False
+            else:
+                # this one is escaped, gobble up the escape backslash
+                text = total_match[1:]
+            
+            if not stat and not self.truncate_on_failure:
+                # get content failed and user wants to retain the include markdown
+                text = total_match
+            s, e = m.span()
+            resl = ''.join([resl, line[c:s], text ])
+            # set the current offset to the end offset of this match
+            c = e
+        # All replacements are done, copy the rest of the string
+        resl = ''.join([resl, line[c:]])
+        return resl
+        
 
     def run(self, lines):
         i = -1
         for line in lines:
             i = i + 1
-            ms = INCLUDE_SYNTAX_RE.finditer(line)
-            resl = ''
-            c = 0
-            for m in ms:
-                text = ''
-                stat = True
-                total_match = m.group(0)
-                d = m.groupdict()
-                escape = d.get('escape')
-                if not escape:
-                    filename = d.get('path')
-                    filename = os.path.expanduser(filename)
-                    encoding = d.get('encoding')
-                    if not encoding_exists(encoding):
-                        if encoding:
-                            log.warning("W: Wrong encoding specified (%s). Falling back to: %s" % (encoding, self.encoding,))
-                        encoding = self.encoding
-                        
-                    urlo = urlparse(filename)
-                    
-                    if self.allow_remote and urlo.netloc:
-                        # remote url
-                        filename = urlunparse(urlo)
-                        text, stat = get_remote_content(filename, encoding)
-                    elif self.allow_local:
-                        # local file
-                        if not os.path.isabs(filename):
-                            filename = os.path.normpath(os.path.join(self.base_path, filename))
-                        try:
-                            with open(filename, 'r', encoding=encoding) as f:
-                                text = f.read()
-                        except Exception as e:
-                            log.exception('E: Could not find file: {}'.format(filename,))
-                            # Do not break or continue, think of current offset, it must be
-                            # set to end offset after replacing the matched part
-                            stat = False
-                    else:
-                        # If allow_remote and allow_local both is false, then status is false
-                        # so that user still have the option to truncate or not, text is empty now.
-                        stat = False
-                else:
-                    # this one is escaped, gobble up the escape backslash
-                    text = total_match[1:]
-                
-                if not stat and not self.truncate_on_failure:
-                    # get content failed and user wants to retain the include markdown
-                    text = total_match
-                s, e = m.span()
-                resl = ''.join([resl, lines[i][c:s], text ])
-                # set the current offset to the end offset of this match
-                c = e
-            # All replacements are done, copy the rest of the string
-            resl = ''.join([resl, lines[i][c:]])
-            lines[i] = resl
+            line = self.get_processed_line(line)
+            lines[i] = line
         return lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
