@@ -3,7 +3,7 @@ Include extension for Python Markdown. It lets you include local or remote (down
 
 This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
 
-Inclusion for local file is by default recursive, for remote file non-recursive. You can change this behavior by passing your desired configuration. 
+Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior by configuration. 
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
@@ -22,10 +22,25 @@ Examples:
 
 **You can escape it to get the literal. For example, `\{!- file_path_or_url !}` will give you literal `{!- file_path_or_url !}` and `\\\{!- file_path_or_url !}` will give you `\{!- file_path_or_url !}`**
 
-**You can change the syntax!!!**
+## You can change the syntax!!!
 
-If you don't like the syntax you can change it through configuration. There might be some complications with the syntax `{!file!}`, for example, conflict with `markdown.extensions.attr_list`
+If you don't like the syntax you can change it through configuration.
 
+There might be some complications with the syntax `{!file!}`, for example, conflict with `markdown.extensions.attr_list` which uses `{:?something}`. As the `:` is optional, a typical problem that occurs is this one:
+
+```md
+A paragraph
+{!our syntax!}
+```
+would produce:
+
+```html
+<p syntax_="syntax!" _our="!our">A paragraph</p>
+```
+
+If you really want to avoid this type of collision, find some character sequence that is not being used by any extension that you are using and use those character sequences to make up the syntax.
+
+[See the configuration section for details](#configuration)
 
 
 # Install
@@ -62,6 +77,13 @@ Config param | Default | Details
 `allow_local` | `True` | Whether to allow including local files.
 `allow_remote` | `True` | Whether to allow including remote files.
 `truncate_on_failure` | `True` | Whether to truncate the matched include syntax on failure. False value for both allow_local and allow_remote is treated as a failure.
+`recurs_local` | `True` | Whether the inclusions are recursive on local files. Options are: `True`, `False` and `None`. `None` is a neutral value with negative default and overridable with recurs_state (e.g `{!+file!}`). `False` will permanently prevent recursion i.e you won't be able to override it with the recurs_state. `True` value is overridable with recurs_state (e.g `{!-file!}`).
+`recurs_remote` | `False` | Whether the inclusions are recursive on remote files. Options are: `True`, `False` and `None`. `None` is a neutral value with negative default and overridable with recurs_state (e.g `{!+file!}`). `False` will permanently prevent recursion i.e you won't be able to override it with the recurs_state. `True` value is overridable with recurs_state (e.g `{!-file!}`).
+`syntax_left` | `\{!` | The left boundary of the syntax. (Used in regex, thus escaped `{`)
+`syntax_right` | `!\}` | The right boundary of the syntax. (Used in regex, thus escaped `}`)
+`syntax_delim` | `\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `|`)
+`syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex)
+`syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex)
 
 ## Example with configuration
 
@@ -73,6 +95,13 @@ configs = {
                 'allow_local': True,
                 'allow_remote': True,
                 'truncate_on_failure': False,
+                'recurs_local': None,
+                'recurs_remote': False,
+                'syntax_left': r'\{!',
+                'syntax_right': r'!\}',
+                'syntax_delim': r'\|',
+                'syntax_recurs_on': '+',
+                'syntax_recurs_off': '-',
             },
         }
 
