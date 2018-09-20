@@ -190,7 +190,6 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                 new_lines.extend(line.splitlines())
             else:
                 new_lines.append(line)
-        print(new_lines)
         return new_lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
