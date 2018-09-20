@@ -3,7 +3,7 @@ Include extension for Python Markdown. It lets you include local or remote (down
 
 This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
 
-**You should not use markdown-include along with this extension, choose either one not both.**
+**You should not use markdown-include along with this extension, choose either one, not both.**
 
 # Syntax
 
@@ -41,7 +41,7 @@ Config param | Default | Details
 `encoding` | `utf-8` | The file encoding.
 `allow_local` | `True` | Whether to allow including local files.
 `allow_remote` | `True` | Whether to allow including remote files.
-`truncate_on_failure` | True | Whether to truncate the matched include syntax on failure. False value for both allow_local and allow_remote is treated as a failure.
+`truncate_on_failure` | `True` | Whether to truncate the matched include syntax on failure. False value for both allow_local and allow_remote is treated as a failure.
 
 ## Example with configuration
 
@@ -82,7 +82,7 @@ The following markdown:
     Writing the syntax literally: \{! file_path !} (You just escape it with a backslash. \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
 
 
-will produce :
+will produce (with fenced code block enabled):
 
 ```html
 <p>Including a gist:</p>
