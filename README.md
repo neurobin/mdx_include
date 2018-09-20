@@ -26,7 +26,9 @@ some text {! some_file !} some more text {! some_more_file | utf-8 !}
 
 Escaping will give you the exact literal \{! some_file !}
 
-If you escape, then the backslash will be removed. If you want the backslash too, then provide two more: \\\{! some_file !}
+If you escape, then the backslash will be removed.
+
+If you want the backslash too, then provide two more: \\\{! some_file !}
 """
 md = markdown.Markdown(extensions=['mdx_include'])
 html = md.convert(text)
@@ -61,7 +63,9 @@ some text {! some_file !} some more text {! some_more_file | utf-8 !}
 
 Escaping will give you the exact literal \{! some_file !}
 
-If you escape, then the backslash will be removed. If you want the backslash too, then provide two more: \\\{! some_file !}
+If you escape, then the backslash will be removed.
+
+If you want the backslash too, then provide two more: \\\{! some_file !}
 """
 md = markdown.Markdown(extensions=['mdx_include'], extension_configs=configs)
 html = md.convert(text)
@@ -79,7 +83,11 @@ The following markdown:
     {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
     ```
 
-    Writing the syntax literally: \{! file_path !} (You just escape it with a backslash. \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
+    Writing the syntax literally: \{! file_path !}
+    
+    You just escape it with a backslash.
+    
+    \\\{! file_path !} -> this one will show the backslash before the syntax in HTML
 
 
 will produce (with fenced code block enabled):
@@ -127,5 +135,7 @@ if __name__ == '__main__':
 
 </code></pre>
 
-<p>Writing the syntax literally: {! file_path !} (You just escape it with a backslash. \{! file_path !} -&gt; this one will show the backslash before the syntax in HTML)</p>
+<p>Writing the syntax literally: {! file_path !}</p>
+<p>You just escape it with a backslash.</p>
+<p>\{! file_path !} -&gt; this one will show the backslash before the syntax in HTML</p>
 ```
