@@ -1,12 +1,7 @@
 <p>This is a simple text </p>
-<pre><code>Including test1.md
-</code></pre>
-<p><strong>This is test1.md</strong></p>
-<pre><code>Including test2.md
-</code></pre>
-<p><strong>This is test2.md</strong></p>
-<pre><code>Including a remote content:
-</code></pre>
+<p>Including test1.md <strong>This is test1.md</strong></p>
+<p>Including test2.md <strong>This is test2.md</strong></p>
+<p>Including a gist:</p>
 <pre><code class="python"># -*- coding: utf-8 -*-
 
 # Settings
@@ -47,3 +42,5 @@ if __name__ == '__main__':
     execute_from_command_line(sys.argv)
 
 </code></pre>
+
+<p>Writing the syntax literally: {! file_path !} (you just escape it with a backslash \{! file_path !} -&gt; this one will show the backslash before the syntax in HTML)</p>

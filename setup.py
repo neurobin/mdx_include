@@ -43,4 +43,4 @@ setup(name="mdx_include",
         'Topic :: Text Processing :: Markup',
       ],
       install_requires=["Markdown>=2.6",],
-test_suite="mdx_include.test")
+test_suite="mdx_include.test.test")

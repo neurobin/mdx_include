@@ -59,6 +59,46 @@ Include was here -> {! https://no.no/ !} <- Non existent URL also strips off the
     # ~ print(html)
     assert(html == output.strip())
 
+
+def test_config():
+    text = r"""
+This is a test with custom configuration
+
+Including test1.md {! test1.md !} where base path is set to mdx_include/test/
+
+Including test2.md {! test2.md | utf-8 !} where base path is set to mdx_include/test/
+
+Including a gist:
+    
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+
+Writing the syntax literally: \{! file_path !} (you just escape it with a backslash \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
+
+Include is here -> {! file_path !} <- This will produce file not found warning but won't strip off the include markdown because truncate_on_failure is False in the config.
+
+Non-existent URL:
+
+Include is here -> {! https://no.no/ !} <- This will produce download failed warning but won't strip off the include markdown because truncate_on_failure is False in the config.
+
+    """.strip()
+    output = get_file_content('mdx_include/test/tc.html')
+    configs = {
+                'mdx_include': {
+                    'base_path': 'mdx_include/test/',
+                    'encoding': 'utf-8',
+                    'allow_local': True,
+                    'allow_remote': True,
+                    'truncate_on_failure': False,
+                },
+            }
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+    html = md.convert(text)
+    # ~ print(html)
+    assert(html == output.strip())
+
 if __name__ == "__main__":
     # ~ test_default()
     # ~ test_non_existent()
+    test_config()
