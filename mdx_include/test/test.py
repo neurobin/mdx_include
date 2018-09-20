@@ -117,7 +117,33 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
     # ~ print(html)
     assert(html == output.strip())
 
+def test_test():
+    text = r"""
+
+# Wikilinks
+
+`[[wikilink]]` is converted to:
+
+```html
+<a href="wikilink" class="wikilink">wikilink</a>
+```
+
+`[[/projects/softwares/unix/rnm]]` would produce: [[/projects/softwares/unix/rnm]]
+
+`[[/docs/web/using-git-to-manage-a-website]]` would give you [[/docs/web/using-git-to-manage-a-website]]
+
+`[[https://google.com]]` would be rendered as [[https://google.com]]
+
+A paragraph
+{!our syntax!}
+
+"""
+    md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra', 'mdx_wikilink_plus']) 
+    html = md.convert(text)
+    print(html)
+
 if __name__ == "__main__":
-    test_default()
-    test_non_existent()
-    test_config()
+    # ~ test_default()
+    # ~ test_non_existent()
+    # ~ test_config()
+    test_test()

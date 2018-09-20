@@ -186,7 +186,11 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         new_lines = []
         for line in lines:
             line = self.mdx_include_get_processed_line(line)
-            new_lines.extend(line.splitlines())
+            if line:
+                new_lines.extend(line.splitlines())
+            else:
+                new_lines.append(line)
+        print(new_lines)
         return new_lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
