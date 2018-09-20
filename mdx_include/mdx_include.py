@@ -37,7 +37,6 @@ from . import version
 
 __version__ = version.__version__
 
-INCLUDE_SYNTAX_RE = re.compile(r'(?P<escape>\\)?\{!(?P<recursive>[+-])?\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
 
 logging.basicConfig()
 LOGGER_NAME = 'mdx_include-' + __version__
@@ -77,6 +76,11 @@ class IncludeExtension(markdown.Extension):
             'truncate_on_failure': [True, 'Truncate the include markdown if failed to get the content.'],
             'recurs_local': [True, 'Whether the inclusion is recursive for local files.'],
             'recurs_remote': [False, 'Whether the inclusion is recursive for remote files.'],
+            'syntax_left': [r'\{!', 'The left mandatory part of the syntax'],
+            'syntax_right': [r'!\}', 'The right mandatory part of the syntax'],
+            'syntax_delim': [r'\|', 'Delemiter used to separate path from encoding'],
+            'syntax_recurs_on': ['+', 'Character to specify recurs on'],
+            'syntax_recurs_off': ['-', 'Character to specify recurs off'],
             }
         super(IncludeExtension, self).__init__(*args, **kwargs)
 
@@ -101,11 +105,14 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.truncate_on_failure = config['truncate_on_failure'][0]
         self.recursive_local = config['recurs_local'][0]
         self.recursive_remote = config['recurs_remote'][0]
+        self.syntax_recurs_on = config['syntax_recurs_on'][0]
+        self.syntax_recurs_off = config['syntax_recurs_off'][0]
+        self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', config['syntax_left'][0], r'(?P<recursive>[', self.syntax_recurs_on, self.syntax_recurs_off, r'])?\s*(?P<path>.+?)\s*(', config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', config['syntax_right'][0], ]))
 
-    def get_processed_line(self, line):
+    def mdx_include_get_processed_line(self, line):
         resl = ''
         c = 0
-        ms = INCLUDE_SYNTAX_RE.finditer(line)
+        ms = self.compiled_re.finditer(line)
         for m in ms:
             text = ''
             stat = True
@@ -130,12 +137,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                     text, stat = get_remote_content(filename, encoding)
                     if stat:
                         if self.recursive_remote:
-                            if recurse_state != '-':
-                                text = self.get_processed_line(text)
+                            if recurse_state != self.syntax_recurs_off:
+                                text = self.mdx_include_get_processed_line(text)
                         elif self.recursive_remote is None:
                             # it's in a neutral position, check recursive state
-                            if recurse_state == '+':
-                                text = self.get_processed_line(text)
+                            if recurse_state == self.syntax_recurs_on:
+                                text = self.mdx_include_get_processed_line(text)
                 elif self.allow_local:
                     # local file
                     if not os.path.isabs(filename):
@@ -144,12 +151,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                         with open(filename, 'r', encoding=encoding) as f:
                             text = f.read()
                             if self.recursive_local:
-                                if recurse_state != '-':
-                                    text = self.get_processed_line(text)
+                                if recurse_state != self.syntax_recurs_off:
+                                    text = self.mdx_include_get_processed_line(text)
                             elif self.recursive_local is None:
                                 # it's in a neutral position, check recursive state
-                                if recurse_state == '+':
-                                    text = self.get_processed_line(text)
+                                if recurse_state == self.syntax_recurs_on:
+                                    text = self.mdx_include_get_processed_line(text)
                     except Exception as e:
                         log.exception('E: Could not find file: {}'.format(filename,))
                         # Do not break or continue, think of current offset, it must be
@@ -176,12 +183,11 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         
 
     def run(self, lines):
-        i = -1
+        new_lines = []
         for line in lines:
-            i = i + 1
-            line = self.get_processed_line(line)
-            lines[i] = line
-        return lines
+            line = self.mdx_include_get_processed_line(line)
+            new_lines.extend(line.splitlines())
+        return new_lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
     return IncludeExtension(*args, **kwargs)

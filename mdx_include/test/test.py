@@ -19,6 +19,28 @@ def get_file_content(path):
         log.exception("E: could not read file: " + f)
     return cont
 
+textg=r"""
+This is a simple text 
+
+Including test1.md {! mdx_include/test/test1.md !}
+
+Including test2.md {! mdx_include/test/test2.md | utf-8 !}
+
+Including a gist:
+    
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+
+Writing the syntax literally: \{! file_path !} (you just escape it with a backslash \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
+
+Recursive include: {! mdx_include/test/testi.md !}
+
+Forcing non-recursive include: {!- mdx_include/test/testi.md !}
+
+Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
+"""
+
 def test_default():
     text = r""" 
 This is a simple text 
@@ -39,11 +61,11 @@ Recursive include: {! mdx_include/test/testi.md !}
 
 Forcing non-recursive include: {!- mdx_include/test/testi.md !}
 
-Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
-
     """.strip()
     output = get_file_content('mdx_include/test/t.html')
-    md = markdown.Markdown(extensions=[IncludeExtension()]) 
+    md = markdown.Markdown(extensions=[IncludeExtension(),
+                        'markdown.extensions.extra',
+                        ]) 
     html = md.convert(text)
     print(html)
     # ~ assert(html == output.strip())
@@ -88,6 +110,10 @@ Non-existent URL:
 
 Include is here -> {! https://no.no/ !} <- This will produce download failed warning but won't strip off the include markdown because truncate_on_failure is False in the config.
 
+Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
+
+{! test2.md | Invalid !}
+
     """.strip()
     output = get_file_content('mdx_include/test/tc.html')
     configs = {
@@ -97,15 +123,22 @@ Include is here -> {! https://no.no/ !} <- This will produce download failed war
                     'allow_local': True,
                     'allow_remote': True,
                     'truncate_on_failure': False,
-                    'recursive_local': True,
+                    'recurs_local': None,
+                    'recurs_remote': False,
+                    'syntax_left': r'\{!',
+                    'syntax_right': r'!\}',
+                    'syntax_delim': r'\|',
+                    'syntax_recurs_on': '+',
+                    'syntax_recurs_off': '-',
+                    
                 },
             }
     md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
     html = md.convert(text)
-    # ~ print(html)
-    assert(html == output.strip())
+    print(html)
+    # ~ assert(html == output.strip())
 
 if __name__ == "__main__":
-    test_default()
+    # ~ test_default()
     # ~ test_non_existent()
-    # ~ test_config()
+    test_config()
