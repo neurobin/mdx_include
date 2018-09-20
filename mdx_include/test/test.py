@@ -99,6 +99,6 @@ Include is here -> {! https://no.no/ !} <- This will produce download failed war
     assert(html == output.strip())
 
 if __name__ == "__main__":
-    # ~ test_default()
-    # ~ test_non_existent()
+    test_default()
+    test_non_existent()
     test_config()

@@ -39,7 +39,8 @@ __version__ = version.__version__
 
 INCLUDE_SYNTAX_RE = re.compile(r'(?P<escape>\\)?\{!\s*(?P<path>.+?)\s*(\|\s*(?P<encoding>.+?)\s*)?!\}')
 
-LOGGER_NAME = 'mdx_include' + __version__
+logging.basicConfig()
+LOGGER_NAME = 'mdx_include-' + __version__
 log = logging.getLogger(LOGGER_NAME)
 
 def encoding_exists(encoding):
@@ -61,7 +62,6 @@ def get_remote_content(url, encoding='utf-8'):
         return build_opener(HTTPRedirectHandler).open(url).read().decode(encoding), True
     except Exception as err:
         # catching all exception, this will effectively return empty string
-        # and thus stip off the include syntax
         log.exception("E: Failed to download: " + url)
         return '', False
 
