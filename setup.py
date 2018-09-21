@@ -1,25 +1,25 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 import os
-import codecs
+import sys
+from codecs import open
 from setuptools import setup
-from distutils.util import convert_path
 
-main_ns = {}
-ver_path = convert_path('mdx_include/version.py')
-with open(ver_path) as ver_file:
-    exec(ver_file.read(), main_ns)
+sys.path[0:0] = ['mdx_include']
+
+from version import __version__
 
 def get_readme(filename):
-    if not os.path.exists(filename):
-        return ""
-
-    with codecs.open(os.path.join(os.path.dirname(__file__), filename), 'r', encoding='utf-8') as readme:
-        content = readme.read()
+    content = ""
+    try:
+        with open(os.path.join(os.path.dirname(__file__), filename), 'r', encoding='utf-8') as readme:
+            content = readme.read()
+    except Exception as e:
+        pass
     return content
 
 setup(name="mdx_include",
-      version=main_ns['__version__'],
+      version=__version__,
       author="Md. Jahidul Hamid",
       author_email="jahidulhamid@yahoo.com",
       description="Python Markdown extension to include local or remote files",
