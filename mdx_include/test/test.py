@@ -109,6 +109,10 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
                     'syntax_delim': r'\|',
                     'syntax_recurs_on': '+',
                     'syntax_recurs_off': '-',
+                    'content_cache_local': True,
+                    'content_cache_remote': True,
+                    'content_cache_clean_local': False,
+                    'content_cache_clean_remote': False,
                     
                 },
             }
@@ -142,8 +146,45 @@ A paragraph
     html = md.convert(text)
     print(html)
 
+def test_cache():
+    text = r"""
+
+Including the same file should use the content from cache instead of reading them from files every time.
+
+Including test1.md {! mdx_include/test/test1.md !}
+
+Including test1.md {! mdx_include/test/test1.md !}
+
+Including test1.md {! mdx_include/test/test1.md !}
+
+Including a gist:
+    
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+
+Including a gist:
+    
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+
+Including a gist:
+    
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+
+"""
+    md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra']) 
+    html = md.convert(text)
+    print(html)
+    md.mdx_include_content_cache_clean_local()
+    md.mdx_include_content_cache_clean_remote()
+
 if __name__ == "__main__":
-    # ~ test_default()
-    # ~ test_non_existent()
-    # ~ test_config()
-    test_test()
+    test_default()
+    test_non_existent()
+    test_config()
+    # ~ test_test()
+    # ~ test_cache()

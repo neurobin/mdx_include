@@ -1,9 +1,11 @@
 
-Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at your desired places. 
+Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at arbitrary positions. 
 
 This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
 
-Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration. 
+Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration.
+
+File/Downloaded contents are cached, i.e if you include same file multiple times in multiple places, they won't be downloaded/read more than once. This behavior can also be changed with configuration.
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
@@ -84,6 +86,17 @@ Config param | Default | Details
 `syntax_delim` | `\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`)
 `syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex)
 `syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex)
+`content_cache_local` | `True` | Whether to cache content for local files
+`content_cache_remote` | `True` | Whether to cache content for remote files
+`content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
+`content_cache_clean_remote` | `False` | Whether to clean content cache for remote files after processing all the includes
+
+The configuration gives you enough cache control, but that's not where it ends :). You can do manual cache cleaning instead of letting the extension handle it for itself. First turn the auto cache cleaning off by setting `content_cache_clean_local` and/or `content_cache_clean_remote` to `False`, then call the cache cleaning function manually on the markdown object whenever you want:
+
+```python
+md.mdx_include_content_cache_clean_local()
+md.mdx_include_content_cache_clean_remote()
+```
 
 ## Example with configuration
 

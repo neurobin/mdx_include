@@ -81,6 +81,10 @@ class IncludeExtension(markdown.Extension):
             'syntax_delim': [r'\|', 'Delemiter used to separate path from encoding'],
             'syntax_recurs_on': ['+', 'Character to specify recurs on'],
             'syntax_recurs_off': ['-', 'Character to specify recurs off'],
+            'content_cache_local': [True, 'Whether to cache content for local files'],
+            'content_cache_remote': [True, 'Whether to cache content for remote files'],
+            'content_cache_clean_local': [False, 'Whether to clean content cache for local files after processing all the includes.'],
+            'content_cache_clean_remote': [False, 'Whether to clean content cache for remote files after processing all the includes.'],
             }
         super(IncludeExtension, self).__init__(*args, **kwargs)
 
@@ -108,6 +112,20 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.syntax_recurs_on = config['syntax_recurs_on'][0]
         self.syntax_recurs_off = config['syntax_recurs_off'][0]
         self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', config['syntax_left'][0], r'(?P<recursive>[', self.syntax_recurs_on, self.syntax_recurs_off, r'])?\s*(?P<path>.+?)\s*(', config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', config['syntax_right'][0], ]))
+        self.mdx_include_content_cache_local = {} # key = file_path_or_url, value = content
+        self.mdx_include_content_cache_remote = {} # key = file_path_or_url, value = content
+        self.markdown.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
+        self.markdown.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
+        self.content_cache_local = config['content_cache_local'][0]
+        self.content_cache_remote = config['content_cache_remote'][0]
+        self.content_cache_clean_local = config['content_cache_clean_local'][0]
+        self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
+    
+    def mdx_include_content_cache_clean_local(self):
+        self.mdx_include_content_cache_local = {}
+        
+    def mdx_include_content_cache_clean_remote(self):
+        self.mdx_include_content_cache_remote = {}
 
     def mdx_include_get_processed_line(self, line):
         resl = ''
@@ -126,42 +144,61 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                 recurse_state = d.get('recursive')
                 if not encoding_exists(encoding):
                     if encoding:
-                        log.warning("W: Wrong encoding specified (%s). Falling back to: %s" % (encoding, self.encoding,))
+                        log.warning("W: Encoding (%s) not recognized . Falling back to: %s" % (encoding, self.encoding,))
                     encoding = self.encoding
                     
                 urlo = urlparse(filename)
                 
-                if self.allow_remote and urlo.netloc:
+                if urlo.netloc:
                     # remote url
-                    filename = urlunparse(urlo)
-                    text, stat = get_remote_content(filename, encoding)
-                    if stat:
-                        if self.recursive_remote:
-                            if recurse_state != self.syntax_recurs_off:
-                                text = self.mdx_include_get_processed_line(text)
-                        elif self.recursive_remote is None:
-                            # it's in a neutral position, check recursive state
-                            if recurse_state == self.syntax_recurs_on:
-                                text = self.mdx_include_get_processed_line(text)
+                    if self.allow_remote:
+                        filename = urlunparse(urlo).rstrip('/')
+                        if self.content_cache_remote and filename in self.mdx_include_content_cache_remote:
+                            text = self.mdx_include_content_cache_remote[filename]
+                            stat = True
+                        else:
+                            text, stat = get_remote_content(filename, encoding)
+                            if stat and self.content_cache_remote:
+                                self.mdx_include_content_cache_remote[filename] = text
+                        if stat and text:
+                            if self.recursive_remote:
+                                if recurse_state != self.syntax_recurs_off:
+                                    text = self.mdx_include_get_processed_line(text)
+                            elif self.recursive_remote is None:
+                                # it's in a neutral position, check recursive state
+                                if recurse_state == self.syntax_recurs_on:
+                                    text = self.mdx_include_get_processed_line(text)
+                    else:
+                        # If allow_remote and allow_local both is false, then status is false
+                        # so that user still have the option to truncate or not, text is empty now.
+                        stat = False
                 elif self.allow_local:
                     # local file
                     if not os.path.isabs(filename):
                         filename = os.path.normpath(os.path.join(self.base_path, filename))
-                    try:
-                        with open(filename, 'r', encoding=encoding) as f:
-                            text = f.read()
-                            if self.recursive_local:
-                                if recurse_state != self.syntax_recurs_off:
-                                    text = self.mdx_include_get_processed_line(text)
-                            elif self.recursive_local is None:
-                                # it's in a neutral position, check recursive state
-                                if recurse_state == self.syntax_recurs_on:
-                                    text = self.mdx_include_get_processed_line(text)
-                    except Exception as e:
-                        log.exception('E: Could not find file: {}'.format(filename,))
-                        # Do not break or continue, think of current offset, it must be
-                        # set to end offset after replacing the matched part
-                        stat = False
+                    if self.content_cache_local and filename in self.mdx_include_content_cache_local:
+                        text = self.mdx_include_content_cache_local[filename]
+                        stat = True
+                    else:
+                        try:
+                            with open(filename, 'r', encoding=encoding) as f:
+                                text = f.read()
+                                stat = True
+                                if self.content_cache_local:
+                                    self.mdx_include_content_cache_local[filename] = text
+                        except Exception as e:
+                            log.exception('E: Could not find file: {}'.format(filename,))
+                            # Do not break or continue, think of current offset, it must be
+                            # set to end offset after replacing the matched part
+                            stat = False
+                    if stat and text:
+                        if self.recursive_local:
+                            if recurse_state != self.syntax_recurs_off:
+                                text = self.mdx_include_get_processed_line(text)
+                        elif self.recursive_local is None:
+                            # it's in a neutral position, check recursive state
+                            if recurse_state == self.syntax_recurs_on:
+                                text = self.mdx_include_get_processed_line(text)
                 else:
                     # If allow_remote and allow_local both is false, then status is false
                     # so that user still have the option to truncate or not, text is empty now.
@@ -190,6 +227,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                 new_lines.extend(line.splitlines())
             else:
                 new_lines.append(line)
+        if self.content_cache_clean_local:
+            self.mdx_include_content_cache_clean_local()
+        if self.content_cache_clean_remote:
+            self.mdx_include_content_cache_clean_remote()
         return new_lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
