@@ -11,18 +11,17 @@ File/Downloaded contents are cached, i.e if you include same file multiple times
 
 # Syntax
 
-General syntax: `{!recurs_state file_path_or_url | encoding !}`
-
-**The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state**
-
-**Examples:**
-
 1. **Simple:** `{! file_path_or_url !}`
 2. **With explicit encoding:** `{! file_path_or_url | encoding !}`
 3. **With recurs_state on:** `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
 4. **With recurs_state off:** `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
+5. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
 
-**You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`**
+
+**General syntax:** `{!recurs_state file_path_or_url | encoding !}`
+
+> The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`)
+
 
 ## You can change the syntax!!!
 
