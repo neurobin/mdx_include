@@ -118,8 +118,43 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
             }
     md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
     html = md.convert(text)
-    # ~ print(html)
-    assert(html == output.strip())
+    print(html)
+    # ~ assert(html == output.strip())
+
+
+def test_recurs():
+    text = r"""
+
+
+Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
+
+    """.strip()
+    output = get_file_content('mdx_include/test/tc.html')
+    configs = {
+                'mdx_include': {
+                    'base_path': '',
+                    'encoding': 'utf-8',
+                    'allow_local': True,
+                    'allow_remote': True,
+                    'truncate_on_failure': False,
+                    'recurs_local': None,
+                    'recurs_remote': False,
+                    'syntax_left': r'\{!',
+                    'syntax_right': r'!\}',
+                    'syntax_delim': r'\|',
+                    'syntax_recurs_on': '+',
+                    'syntax_recurs_off': '-',
+                    'content_cache_local': True,
+                    'content_cache_remote': True,
+                    'content_cache_clean_local': False,
+                    'content_cache_clean_remote': False,
+                    
+                },
+            }
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+    html = md.convert(text)
+    print(html)
+    # ~ assert(html == output.strip())
 
 def test_test():
     text = r"""
@@ -142,7 +177,28 @@ A paragraph
 {!our syntax!}
 
 """
-    md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra', 'mdx_wikilink_plus']) 
+    configs = {
+                'mdx_include': {
+                    'base_path': 'mdx_include/test/',
+                    'encoding': 'utf-8',
+                    'allow_local': True,
+                    'allow_remote': True,
+                    'truncate_on_failure': False,
+                    'recurs_local': None,
+                    'recurs_remote': None,
+                    'syntax_left': r'\{!',
+                    'syntax_right': r'!\}',
+                    'syntax_delim': r'\|',
+                    'syntax_recurs_on': '+',
+                    'syntax_recurs_off': '-',
+                    'content_cache_local': True,
+                    'content_cache_remote': True,
+                    'content_cache_clean_local': False,
+                    'content_cache_clean_remote': False,
+                    
+                },
+            }
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra', 'mdx_wikilink_plus']) 
     html = md.convert(text)
     print(html)
 
@@ -188,3 +244,4 @@ if __name__ == "__main__":
     test_config()
     # ~ test_test()
     # ~ test_cache()
+    test_recurs()

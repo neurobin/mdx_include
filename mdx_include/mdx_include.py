@@ -67,7 +67,7 @@ def get_remote_content(url, encoding='utf-8'):
 class IncludeExtension(markdown.Extension):
     """Include Extension class for markdown"""
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, configs={}):
         self.config = {
             'base_path': [ '.', 'Base path from where relative paths are calculated',],
             'encoding': [ 'utf-8', 'Encoding of the files.', ],
@@ -86,10 +86,28 @@ class IncludeExtension(markdown.Extension):
             'content_cache_clean_local': [False, 'Whether to clean content cache for local files after processing all the includes.'],
             'content_cache_clean_remote': [False, 'Whether to clean content cache for remote files after processing all the includes.'],
             }
-        super(IncludeExtension, self).__init__(*args, **kwargs)
+        # ~ super(IncludeExtension, self).__init__(*args, **kwargs)
+        # default setConfig does not preserve None when the default config value is a bool (a bug may be or design decision)
+        for k, v in configs.items():
+            self.setConfig(k, v)
+        
+        self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', self.config['syntax_left'][0], r'(?P<recursive>[', self.config['syntax_recurs_on'][0], self.config['syntax_recurs_off'][0], r'])?\s*(?P<path>.+?)\s*(', self.config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', self.config['syntax_right'][0], ]))
+    
+    def setConfig(self, key, value):
+        if value is None or isinstance(value, bool):
+            if self.config[key][0] is None or isinstance(self.config[key][0], bool):
+                pass
+            else:
+                raise TypeError("E: The type of the value (%s) for the key %s is not correct." % (value, key,))
+        else:
+            if isinstance(value, type(self.config[key][0])):
+                pass
+            else:
+                raise TypeError("E: The type ({}) of the value ({}) does not match with the required type ({}) for the key {}.".format(type(value), value, type(self.config[key][0]), key))
+        self.config[key][0] = value
 
     def extendMarkdown(self, md, md_globals):
-        md.preprocessors.add( 'mdx_include', IncludePreprocessor(md, self.config),'_begin')
+        md.preprocessors.add( 'mdx_include', IncludePreprocessor(md, self.config, self.compiled_re),'_begin')
 
 
 class IncludePreprocessor(markdown.preprocessors.Preprocessor):
@@ -100,8 +118,9 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
     This is done prior to any other Markdown processing. 
     All file names are relative to the location from which Markdown is being called.
     '''
-    def __init__(self, md, config):
+    def __init__(self, md, config, compiled_regex):
         super(IncludePreprocessor, self).__init__(md)
+        self.compiled_re = compiled_regex
         self.base_path = config['base_path'][0]
         self.encoding = config['encoding'][0]
         self.allow_local = config['allow_local'][0]
@@ -111,7 +130,6 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.recursive_remote = config['recurs_remote'][0]
         self.syntax_recurs_on = config['syntax_recurs_on'][0]
         self.syntax_recurs_off = config['syntax_recurs_off'][0]
-        self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', config['syntax_left'][0], r'(?P<recursive>[', self.syntax_recurs_on, self.syntax_recurs_off, r'])?\s*(?P<path>.+?)\s*(', config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', config['syntax_right'][0], ]))
         self.mdx_include_content_cache_local = {} # key = file_path_or_url, value = content
         self.mdx_include_content_cache_remote = {} # key = file_path_or_url, value = content
         self.markdown.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
@@ -120,6 +138,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.content_cache_remote = config['content_cache_remote'][0]
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
         self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
+        
     
     def mdx_include_content_cache_clean_local(self):
         self.mdx_include_content_cache_local = {}

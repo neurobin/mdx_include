@@ -5,7 +5,7 @@ This project is motivated by [markdown-include](https://github.com/cmacmackin/ma
 
 Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration.
 
-File/Downloaded contents are cached, i.e if you include same file multiple times in multiple places, they won't be downloaded/read more than once. This behavior can also be changed with configuration.
+File/Downloaded contents are cached, i.e if you include same file multiple times in multiple places, they won't be read/downloaded more than once. This behavior can also be changed with configuration.
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
@@ -13,7 +13,7 @@ File/Downloaded contents are cached, i.e if you include same file multiple times
 
 General syntax: `{!recurs_state file_path_or_url | encoding !}`
 
-**The spaces are not necessary. They are just to make it look nice :) . No spaces allowd between `{!` and recurs_state**
+**The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state**
 
 **Examples:**
 
