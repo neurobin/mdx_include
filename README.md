@@ -69,7 +69,7 @@ html = md.convert(text)
 print(html)
 ```
 
-**Example output:**
+**Example output when test1.md contains a single line `**This is test1.md**` and test2.md contains `**This is test2.md**`:**
 
 ```html
 <p>some text <strong>This is test1.md</strong> some more text <strong>This is test2.md</strong></p>
