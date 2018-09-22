@@ -153,7 +153,7 @@ remote_cache_dict = md.mdx_include_get_content_cache_remote()
 ```
 
 
-# Another example
+# An example of including a gist
 
 The following markdown:
 
@@ -163,12 +163,6 @@ The following markdown:
     ```python
     {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
     ```
-
-    Writing the syntax literally: \{! file_path !}
-    
-    You just escape it with a backslash.
-    
-    \\\{! file_path !} -> this one will show the backslash before the syntax in HTML
 
 
 will produce (with fenced code block enabled):
@@ -215,8 +209,4 @@ if __name__ == '__main__':
     execute_from_command_line(sys.argv)
 
 </code></pre>
-
-<p>Writing the syntax literally: {! file_path !}</p>
-<p>You just escape it with a backslash.</p>
-<p>\{! file_path !} -&gt; this one will show the backslash before the syntax in HTML</p>
 ```
