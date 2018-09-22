@@ -153,7 +153,7 @@ remote_cache_dict = md.mdx_include_get_content_cache_remote()
 ```
 
 
-# Examples
+# Another example
 
 The following markdown:
 
