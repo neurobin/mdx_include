@@ -156,51 +156,36 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
     print(html)
     # ~ assert(html == output.strip())
 
-def test_test():
+def test_manual_cache():
     text = r"""
 
-# Wikilinks
+{!test1.md!}
 
-`[[wikilink]]` is converted to:
-
-```html
-<a href="wikilink" class="wikilink">wikilink</a>
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
-
-`[[/projects/softwares/unix/rnm]]` would produce: [[/projects/softwares/unix/rnm]]
-
-`[[/docs/web/using-git-to-manage-a-website]]` would give you [[/docs/web/using-git-to-manage-a-website]]
-
-`[[https://google.com]]` would be rendered as [[https://google.com]]
-
-A paragraph
-{!our syntax!}
 
 """
     configs = {
                 'mdx_include': {
                     'base_path': 'mdx_include/test/',
-                    'encoding': 'utf-8',
-                    'allow_local': True,
-                    'allow_remote': True,
-                    'truncate_on_failure': False,
-                    'recurs_local': None,
-                    'recurs_remote': None,
-                    'syntax_left': r'\{!',
-                    'syntax_right': r'!\}',
-                    'syntax_delim': r'\|',
-                    'syntax_recurs_on': '+',
-                    'syntax_recurs_off': '-',
-                    'content_cache_local': True,
-                    'content_cache_remote': True,
-                    'content_cache_clean_local': False,
-                    'content_cache_clean_remote': False,
                     
                 },
             }
-    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra', 'mdx_wikilink_plus']) 
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra',]) 
     html = md.convert(text)
-    print(html)
+    # ~ print(html)
+    print(md.mdx_include_get_content_cache_local())
+    prevr = md.mdx_include_get_content_cache_remote()
+    html = md.convert("{!test2.md!}")
+    print(md.mdx_include_get_content_cache_local())
+    md.mdx_include_get_content_cache_local()['mdx_include/test/test2.md'] = 'modified'
+    print(md.convert("{!test2.md!}"))
+    assert(md.mdx_include_get_content_cache_remote()==prevr)
+    md.mdx_include_content_cache_clean_local()
+    assert(md.mdx_include_get_content_cache_local()=={})
+    md.mdx_include_content_cache_clean_remote()
+    assert(md.mdx_include_get_content_cache_remote() == {})
 
 def test_cache():
     text = r"""
@@ -242,6 +227,6 @@ if __name__ == "__main__":
     test_default()
     test_non_existent()
     test_config()
-    # ~ test_test()
-    # ~ test_cache()
+    test_manual_cache()
+    test_cache()
     test_recurs()

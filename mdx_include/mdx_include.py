@@ -134,6 +134,8 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.mdx_include_content_cache_remote = {} # key = file_path_or_url, value = content
         self.markdown.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
         self.markdown.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
+        self.markdown.mdx_include_get_content_cache_local = self.mdx_include_get_content_cache_local
+        self.markdown.mdx_include_get_content_cache_remote = self.mdx_include_get_content_cache_remote
         self.content_cache_local = config['content_cache_local'][0]
         self.content_cache_remote = config['content_cache_remote'][0]
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
@@ -145,6 +147,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         
     def mdx_include_content_cache_clean_remote(self):
         self.mdx_include_content_cache_remote = {}
+    
+    def mdx_include_get_content_cache_local(self):
+        return self.mdx_include_content_cache_local
+
+    def mdx_include_get_content_cache_remote(self):
+        return self.mdx_include_content_cache_remote
 
     def mdx_include_get_processed_line(self, line):
         resl = ''

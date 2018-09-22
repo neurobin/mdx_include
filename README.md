@@ -56,7 +56,7 @@ pip install mdx_include
 
 ```python
 text = r"""
-some text {! some_file !} some more text {! some_more_file | utf-8 !}
+some text {! test1.md !} some more text {! test2.md | utf-8 !}
 
 Escaping will give you the exact literal \{! some_file !}
 
@@ -68,6 +68,16 @@ md = markdown.Markdown(extensions=['mdx_include'])
 html = md.convert(text)
 print(html)
 ```
+
+**Example output:**
+
+```html
+<p>some text <strong>This is test1.md</strong> some more text <strong>This is test2.md</strong></p>
+<p>Escaping will give you the exact literal {! some_file !}</p>
+<p>If you escape, then the backslash will be removed.</p>
+<p>If you want the backslash too, then provide two more: \{! some_file !}</p>
+```
+
 
 # Configuration
 
@@ -89,13 +99,6 @@ Config param | Default | Details
 `content_cache_remote` | `True` | Whether to cache content for remote files
 `content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
 `content_cache_clean_remote` | `False` | Whether to clean content cache for remote files after processing all the includes
-
-The configuration gives you enough cache control, but that's not where it ends :). You can do manual cache cleaning instead of letting the extension handle it for itself. First turn the auto cache cleaning off by setting `content_cache_clean_local` and/or `content_cache_clean_remote` to `False`, then call the cache cleaning function manually on the markdown object whenever you want:
-
-```python
-md.mdx_include_content_cache_clean_local()
-md.mdx_include_content_cache_clean_remote()
-```
 
 ## Example with configuration
 
@@ -130,6 +133,23 @@ md = markdown.Markdown(extensions=['mdx_include'], extension_configs=configs)
 html = md.convert(text)
 print(html)
 ```
+
+# Manual cache control
+
+The configuration gives you enough cache control, but that's not where it ends :). You can do manual cache cleaning instead of letting the extension handle it for itself. First turn the auto cache cleaning off by setting `content_cache_clean_local` and/or `content_cache_clean_remote` to `False` (this is default), then call the cache cleaning function manually on the markdown object whenever you want:
+
+```python
+md.mdx_include_content_cache_clean_local()
+md.mdx_include_content_cache_clean_remote()
+```
+
+You can also get the internal cache dictionary and make inplace modification (e.g cleaning a specific cache for a specific file/URL, or even modify the cached content):
+
+```python
+local_cache_dict = md.mdx_include_get_content_cache_local()
+remote_cache_dict = md.mdx_include_get_content_cache_remote()
+```
+
 
 # Examples
 
