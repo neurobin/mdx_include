@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/neurobin/mdx_include.svg?branch=release)](https://travis-ci.org/neurobin/mdx_include)
 
 Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at arbitrary positions. 
 
@@ -6,6 +7,8 @@ This project is motivated by [markdown-include](https://github.com/cmacmackin/ma
 Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration.
 
 File/Downloaded contents are cached, i.e if you include same file multiple times in multiple places, they won't be read/downloaded more than once. This behavior can also be changed with configuration.
+
+Circular inclusion by default raises an exception. You can change this behavior to include the affected files in non-recursive mode through configuration.
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
@@ -101,6 +104,7 @@ Config param | Default | Details
 `content_cache_remote` | `True` | Whether to cache content for remote files
 `content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
 `content_cache_clean_remote` | `False` | Whether to clean content cache for remote files after processing all the includes
+`allow_circular_inclusion` | `False` | Whether to allow circular inclusion. If allowed, the affected files will be included in non-recursive mode, otherwise it will raise an exception.
 
 ## Example with configuration
 
@@ -152,6 +156,17 @@ local_cache_dict = md.mdx_include_get_content_cache_local()
 remote_cache_dict = md.mdx_include_get_content_cache_remote()
 ```
 
+# How circular inclusion works
+
+Let's say, there are three files, A, B and C. A includes B, B includes C and C inclues A and we are doing recursive include.
+
+If circular inclusion is not allowed in the config i.e if `allow_circular_inclusion` is `False` (which is the default) then it will raise an exception.
+
+If `allow_circular_inclusion` is set to `True`, then it will work like this:
+
+1. A and B will be normally included
+2. B includes C normally too
+3. C includes A which is a circular inclusion (`C>A>B>C>A>B>C...`). Thus A will be included in non-recursive mode as `allow_circular_inclusion` is set to `True` i.e C will include A literally without parsing A anymore.
 
 # An example of including a gist
 

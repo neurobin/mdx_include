@@ -16,7 +16,7 @@ def get_file_content(path):
         with open(path, 'r') as f:
             cont = f.read();
     except Exception as e:
-        log.exception("E: could not read file: " + f)
+        log.exception("E: could not read file: " + path)
     return cont
 
 
@@ -223,6 +223,26 @@ Including a gist:
     md.mdx_include_content_cache_clean_local()
     md.mdx_include_content_cache_clean_remote()
 
+
+def test_cyclic():
+    text = r"""
+This is a test with circular inclusion
+
+{! testcya.md !}
+
+    """.strip()
+    output = get_file_content('mdx_include/test/testcy.html')
+    configs = {
+                'mdx_include': {
+                    'base_path': 'mdx_include/test/',
+                    'allow_circular_inclusion': True,
+                },
+            }
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+    html = md.convert(text)
+    # ~ print(html)
+    assert(html == output.strip())
+
 if __name__ == "__main__":
     test_default()
     test_non_existent()
@@ -230,3 +250,4 @@ if __name__ == "__main__":
     test_manual_cache()
     test_cache()
     test_recurs()
+    test_cyclic()

@@ -73,20 +73,28 @@ class Cyclic(object):
         self.root = {}
 
     def is_cyclic(self, child):
-        return True if child in self.root and child in self.root[child] else False
+        """Return True if child has any cyclic relation otherwise return False"""
+        if child in self.root:
+            if child in self.root[child]:
+                return True
+            else:
+                for parent in self.root[child]:
+                    if parent in self.root and child in self.root[parent]:
+                        return True
+        return False
 
     def append(self, child, parent):
         """Apend to root a relation like child > parent """
-        parentl = [parent] if parent else []
+        parentl = set([parent]) if parent else set()
 
         if child in self.root:
-            if parent in self.root[child]:
-                # already exists
-                pass
-            else:
-                self.root[child].extend(parentl)
+            self.root[child].update(parentl)
         else:
             self.root[child] = parentl
+        
+        if parent in self.root:
+            # parent's parents are also the child's parents
+            self.root[child].update(self.root[parent])
 
 class IncludeExtension(markdown.Extension):
     """Include Extension class for markdown"""
@@ -167,7 +175,6 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
         self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
         self.allow_circular_inclusion = config['allow_circular_inclusion'][0]
-        self.cyclic = Cyclic()
         
     
     def mdx_include_content_cache_clean_local(self):
@@ -196,9 +203,9 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
             text = self.mdx_include_get_processed_line(text, filename)
         else:
             if self.allow_circular_inclusion:
-                pass
+                log.warning("Circular inclusion detected in file: " + parent + " when including " + filename + ". Including in non-recursive mode ...")
             else:
-                raise ValueError("E: Circular inclusion not allowed; detected in file: " + parent + " when including " + filename)
+                raise RuntimeError("Circular inclusion not allowed; detected in file: " + parent + " when including " + filename + " whose parents are: " + str(self.cyclic.root[filename]))
         return text
 
     def mdx_include_get_processed_line(self, line, parent):
@@ -312,6 +319,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
 
     def run(self, lines):
         """Process the list of lines provided and return a modified list"""
+        self.cyclic = Cyclic()
         new_lines = []
         for line in lines:
             line = self.mdx_include_get_processed_line(line, '')

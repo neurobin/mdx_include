@@ -1,0 +1,43 @@
+<p>This is a test with circular inclusion</p>
+<p>-----------------------A-------------------------
+I am A, my task is to include B and D</p>
+<p>B: </p>
+<p>-----------------------B-------------------------
+I am B, my task is to include C. </p>
+<p>Huh, I am the parent of C now, he will be in trouble for including me.</p>
+<p>C: </p>
+<p>-----------------------C-------------------------
+I am C, my task is to include A and D.</p>
+<p>A: </p>
+<p>-----------------------A-------------------------
+I am A, my task is to include B and D</p>
+<p>B: {! testcyb.md !}</p>
+<p>D: {! testcyd.md !}
+-----------------------A-------------------------</p>
+<p>D: </p>
+<p>-----------------------D-------------------------
+I am D, my task is to include A and C.</p>
+<p>Huh, I am the parent of A and C now, they will be in trouble for including me.</p>
+<p>A: </p>
+<p>-----------------------A-------------------------
+I am A, my task is to include B and D</p>
+<p>B: {! testcyb.md !}</p>
+<p>D: {! testcyd.md !}
+-----------------------A-------------------------</p>
+<p>C: </p>
+<p>-----------------------C-------------------------
+I am C, my task is to include A and D.</p>
+<p>A: {! testcya.md !}</p>
+<p>D: {! testcyd.md !}
+-----------------------C-------------------------</p>
+<p>-----------------------D-------------------------</p>
+<p>-----------------------C-------------------------</p>
+<p>-----------------------B-------------------------</p>
+<p>D: </p>
+<p>-----------------------D-------------------------
+I am D, my task is to include A and C.</p>
+<p>Huh, I am the parent of A and C now, they will be in trouble for including me.</p>
+<p>A: {! testcya.md !}</p>
+<p>C: {! testcyc.md !}
+-----------------------D-------------------------</p>
+<p>-----------------------A-------------------------</p>
