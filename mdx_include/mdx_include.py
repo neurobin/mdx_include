@@ -64,6 +64,30 @@ def get_remote_content(url, encoding='utf-8'):
         log.exception("E: Failed to download: " + url)
         return '', False
 
+
+class Cyclic(object):
+    """A class to handle cyclic relations.
+    """
+
+    def __init__(self):
+        self.root = {}
+
+    def is_cyclic(self, child):
+        return True if child in self.root and child in self.root[child] else False
+
+    def append(self, child, parent):
+        """Apend to root a relation like child > parent """
+        parentl = [parent] if parent else []
+
+        if child in self.root:
+            if parent in self.root[child]:
+                # already exists
+                pass
+            else:
+                self.root[child].extend(parentl)
+        else:
+            self.root[child] = parentl
+
 class IncludeExtension(markdown.Extension):
     """Include Extension class for markdown"""
 
@@ -85,6 +109,7 @@ class IncludeExtension(markdown.Extension):
             'content_cache_remote': [True, 'Whether to cache content for remote files'],
             'content_cache_clean_local': [False, 'Whether to clean content cache for local files after processing all the includes.'],
             'content_cache_clean_remote': [False, 'Whether to clean content cache for remote files after processing all the includes.'],
+            'allow_circular_inclusion': [False, 'Whether to allow circular inclusion.'],
             }
         # ~ super(IncludeExtension, self).__init__(*args, **kwargs)
         # default setConfig does not preserve None when the default config value is a bool (a bug may be or design decision)
@@ -94,6 +119,7 @@ class IncludeExtension(markdown.Extension):
         self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', self.config['syntax_left'][0], r'(?P<recursive>[', self.config['syntax_recurs_on'][0], self.config['syntax_recurs_off'][0], r'])?\s*(?P<path>.+?)\s*(', self.config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', self.config['syntax_right'][0], ]))
     
     def setConfig(self, key, value):
+        """Sets the config key value pair preserving None value and validating the value type."""
         if value is None or isinstance(value, bool):
             if self.config[key][0] is None or isinstance(self.config[key][0], bool):
                 pass
@@ -140,23 +166,45 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.content_cache_remote = config['content_cache_remote'][0]
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
         self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
+        self.allow_circular_inclusion = config['allow_circular_inclusion'][0]
+        self.cyclic = Cyclic()
         
     
     def mdx_include_content_cache_clean_local(self):
+        """Clean the cache dict for local files """
         self.mdx_include_content_cache_local = {}
         
     def mdx_include_content_cache_clean_remote(self):
+        """Clean the cache dict for remote files """
         self.mdx_include_content_cache_remote = {}
     
     def mdx_include_get_content_cache_local(self):
+        """Get the cache dict for local files """
         return self.mdx_include_content_cache_local
 
     def mdx_include_get_content_cache_remote(self):
+        """Get the cache dict for remote files """
         return self.mdx_include_content_cache_remote
+    
+    def mdx_include_get_cyclic_safe_processed_line(self, text, filename, parent):
+        """Returns recursive text if cyclic inclusion not detected,
+        otherwise returns the  unmodified text if cyclic is allowed,
+        otherwise throws ValueError.
+        
+        """
+        if not self.cyclic.is_cyclic(filename):
+            text = self.mdx_include_get_processed_line(text, filename)
+        else:
+            if self.allow_circular_inclusion:
+                pass
+            else:
+                raise ValueError("E: Circular inclusion not allowed; detected in file: " + parent + " when including " + filename)
+        return text
 
-    def mdx_include_get_processed_line(self, line):
+    def mdx_include_get_processed_line(self, line, parent):
+        """Process each line and return the processed text"""
         resl = ''
-        c = 0
+        c = 0 # current offset
         ms = self.compiled_re.finditer(line)
         for m in ms:
             text = ''
@@ -180,6 +228,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                     # remote url
                     if self.allow_remote:
                         filename = urlunparse(urlo).rstrip('/')
+
+                        #push the child parent relation
+                        self.cyclic.append(filename, parent)
+
                         if self.content_cache_remote and filename in self.mdx_include_content_cache_remote:
                             text = self.mdx_include_content_cache_remote[filename]
                             stat = True
@@ -187,14 +239,18 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                             text, stat = get_remote_content(filename, encoding)
                             if stat and self.content_cache_remote:
                                 self.mdx_include_content_cache_remote[filename] = text
+                        # We can not cache the whole parsed content after doing all recursive includes
+                        # because some files can be included in non-recursive mode. If we just put the recrsive
+                        # content from cache it won't work.
+                        # This if statement must be outside the cache management if statement.
                         if stat and text:
                             if self.recursive_remote:
                                 if recurse_state != self.syntax_recurs_off:
-                                    text = self.mdx_include_get_processed_line(text)
+                                    text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
                             elif self.recursive_remote is None:
                                 # it's in a neutral position, check recursive state
                                 if recurse_state == self.syntax_recurs_on:
-                                    text = self.mdx_include_get_processed_line(text)
+                                    text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
                     else:
                         # If allow_remote and allow_local both is false, then status is false
                         # so that user still have the option to truncate or not, text is empty now.
@@ -203,6 +259,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                     # local file
                     if not os.path.isabs(filename):
                         filename = os.path.normpath(os.path.join(self.base_path, filename))
+
+                    #push the child parent relation
+                    self.cyclic.append(filename, parent)
+
                     if self.content_cache_local and filename in self.mdx_include_content_cache_local:
                         text = self.mdx_include_content_cache_local[filename]
                         stat = True
@@ -218,14 +278,18 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                             # Do not break or continue, think of current offset, it must be
                             # set to end offset after replacing the matched part
                             stat = False
+                    # We can not cache the whole parsed content after doing all recursive includes
+                    # because some files can be included in non-recursive mode. If we just put the recrsive
+                    # content from cache it won't work.
+                    # This if statement must be outside the cache management if statement.
                     if stat and text:
                         if self.recursive_local:
                             if recurse_state != self.syntax_recurs_off:
-                                text = self.mdx_include_get_processed_line(text)
+                                text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
                         elif self.recursive_local is None:
                             # it's in a neutral position, check recursive state
                             if recurse_state == self.syntax_recurs_on:
-                                text = self.mdx_include_get_processed_line(text)
+                                text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
                 else:
                     # If allow_remote and allow_local both is false, then status is false
                     # so that user still have the option to truncate or not, text is empty now.
@@ -247,9 +311,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         
 
     def run(self, lines):
+        """Process the list of lines provided and return a modified list"""
         new_lines = []
         for line in lines:
-            line = self.mdx_include_get_processed_line(line)
+            line = self.mdx_include_get_processed_line(line, '')
             if line:
                 new_lines.extend(line.splitlines())
             else:
