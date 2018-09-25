@@ -1,0 +1,129 @@
+<p>Including the same file should use the content from cache instead of reading them from files every time.</p>
+<p>Including test1.md <strong>This is test1.md</strong></p>
+<p>Including test1.md <strong>This is test1.md</strong></p>
+<p>Including test1.md <strong>This is test1.md</strong></p>
+<p>Including a gist:</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+
+# Settings
+from django.conf import settings
+
+
+settings.configure(
+    DEBUG=True,
+    SECRET_KEY='secretfoobar',
+    ROOT_URLCONF=__name__,
+    MIDDLEWARE_CLASSES=(
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    )
+)
+
+
+# Views
+from django.http import HttpResponse
+from django.conf.urls import url
+
+
+def index(request):
+    return HttpResponse('&lt;h1&gt;Hello Word&lt;/h1&gt;')
+
+# Routes
+urlpatterns = (
+    url(r'^$', index),
+)
+
+
+# RunServer
+if __name__ == '__main__':
+    from django.core.management import execute_from_command_line
+    import sys
+
+    execute_from_command_line(sys.argv)
+
+</code></pre>
+
+<p>Including a gist:</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+
+# Settings
+from django.conf import settings
+
+
+settings.configure(
+    DEBUG=True,
+    SECRET_KEY='secretfoobar',
+    ROOT_URLCONF=__name__,
+    MIDDLEWARE_CLASSES=(
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    )
+)
+
+
+# Views
+from django.http import HttpResponse
+from django.conf.urls import url
+
+
+def index(request):
+    return HttpResponse('&lt;h1&gt;Hello Word&lt;/h1&gt;')
+
+# Routes
+urlpatterns = (
+    url(r'^$', index),
+)
+
+
+# RunServer
+if __name__ == '__main__':
+    from django.core.management import execute_from_command_line
+    import sys
+
+    execute_from_command_line(sys.argv)
+
+</code></pre>
+
+<p>Including a gist:</p>
+<pre><code class="python"># -*- coding: utf-8 -*-
+
+# Settings
+from django.conf import settings
+
+
+settings.configure(
+    DEBUG=True,
+    SECRET_KEY='secretfoobar',
+    ROOT_URLCONF=__name__,
+    MIDDLEWARE_CLASSES=(
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    )
+)
+
+
+# Views
+from django.http import HttpResponse
+from django.conf.urls import url
+
+
+def index(request):
+    return HttpResponse('&lt;h1&gt;Hello Word&lt;/h1&gt;')
+
+# Routes
+urlpatterns = (
+    url(r'^$', index),
+)
+
+
+# RunServer
+if __name__ == '__main__':
+    from django.core.management import execute_from_command_line
+    import sys
+
+    execute_from_command_line(sys.argv)
+
+</code></pre>

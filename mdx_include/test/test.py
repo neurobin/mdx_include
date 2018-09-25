@@ -118,8 +118,8 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
             }
     md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
     html = md.convert(text)
-    print(html)
-    # ~ assert(html == output.strip())
+    # ~ print(html)
+    assert(html == output.strip())
 
 
 def test_recurs():
@@ -129,7 +129,7 @@ def test_recurs():
 Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
 
     """.strip()
-    output = get_file_content('mdx_include/test/tc.html')
+    output = get_file_content('mdx_include/test/tr.html')
     configs = {
                 'mdx_include': {
                     'base_path': '',
@@ -153,8 +153,8 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
             }
     md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
     html = md.convert(text)
-    print(html)
-    # ~ assert(html == output.strip())
+    # ~ print(html)
+    assert(html == output.strip())
 
 def test_manual_cache():
     text = r"""
@@ -179,7 +179,7 @@ def test_manual_cache():
     prevr = md.mdx_include_get_content_cache_remote()
     html = md.convert("{!test2.md!}")
     print(md.mdx_include_get_content_cache_local())
-    md.mdx_include_get_content_cache_local()['mdx_include/test/test2.md'] = 'modified'
+    md.mdx_include_get_content_cache_local()['mdx_include/test/test2.md'] = ['modified']
     print(md.convert("{!test2.md!}"))
     assert(md.mdx_include_get_content_cache_remote()==prevr)
     md.mdx_include_content_cache_clean_local()
@@ -216,10 +216,12 @@ Including a gist:
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
 
-"""
+""".strip()
+    output = get_file_content('mdx_include/test/tcache.html')
     md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra']) 
     html = md.convert(text)
-    print(html)
+    # ~ print(html)
+    assert(html == output.strip())
     md.mdx_include_content_cache_clean_local()
     md.mdx_include_content_cache_clean_remote()
 

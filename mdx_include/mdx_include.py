@@ -54,27 +54,27 @@ def encoding_exists(encoding):
             return True
     return False
 
-def get_remote_content(url, encoding='utf-8'):
+def get_remote_content_list(url, encoding='utf-8'):
     """Follow redirect and return the content"""
     try:
         log.info("Downloading url: "+ url)
-        return build_opener(HTTPRedirectHandler).open(url).read().decode(encoding), True
+        return ''.join([build_opener(HTTPRedirectHandler).open(url).read().decode(encoding), '\n']).splitlines(), True
     except Exception as err:
         # catching all exception, this will effectively return empty string
         log.exception("E: Failed to download: " + url)
-        return '', False
+        return [], False
 
-def get_local_content(filename, encoding):
+def get_local_content_list(filename, encoding):
     """Return the file content with status"""
-    text = ''
+    textl = []
     stat = False
     try:
         with open(filename, 'r', encoding=encoding) as f:
-            text = f.read()
+            textl = ''.join([f.read(), '\n']).splitlines()
             stat = True
     except Exception as e:
         log.exception('E: Could not find file: {}'.format(filename,))
-    return text, stat
+    return textl, stat
 
 class Cyclic(object):
     """A class to handle cyclic relations.
@@ -94,8 +94,8 @@ class Cyclic(object):
                         return True
         return False
 
-    def append(self, child, parent):
-        """Apend to root a relation like child > parent """
+    def add(self, child, parent):
+        """Add to root a relation like child > parent """
         parentl = set([parent]) if parent else set()
 
         if child in self.root:
@@ -203,133 +203,150 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
     def mdx_include_get_content_cache_remote(self):
         """Get the cache dict for remote files """
         return self.mdx_include_content_cache_remote
-    
-    def mdx_include_get_cyclic_safe_processed_line(self, text, filename, parent):
-        """Returns recursive text if cyclic inclusion not detected,
-        otherwise returns the  unmodified text if cyclic is allowed,
-        otherwise throws ValueError.
+
+    def mdx_include_get_cyclic_safe_processed_line_list(self, textl, filename, parent):
+        """Returns recursive text list if cyclic inclusion not detected,
+        otherwise returns the  unmodified text list if cyclic is allowed,
+        otherwise throws exception.
         
         """
         if not self.cyclic.is_cyclic(filename):
-            text = self.mdx_include_get_processed_line(text, filename)
+            textl = self.mdx_include_get_processed_lines(textl, filename)
         else:
             if self.allow_circular_inclusion:
                 log.warning("Circular inclusion detected in file: " + parent + " when including " + filename + ". Including in non-recursive mode ...")
             else:
                 raise RuntimeError("Circular inclusion not allowed; detected in file: " + parent + " when including " + filename + " whose parents are: " + str(self.cyclic.root[filename]))
-        return text
-
-    def mdx_include_get_processed_line(self, line, parent):
-        """Process each line and return the processed text"""
-        resl = ''
-        c = 0 # current offset
-        ms = self.compiled_re.finditer(line)
-        for m in ms:
-            text = ''
+        return textl
+    
+    def get_remote_content_list(self, filename, encoding='utf-8'):
+        """Get remote content list from cache or by download"""
+        if self.content_cache_remote and filename in self.mdx_include_content_cache_remote:
+            textl = self.mdx_include_content_cache_remote[filename]
             stat = True
-            total_match = m.group(0)
-            d = m.groupdict()
-            escape = d.get('escape')
-            if not escape:
-                filename = d.get('path')
-                filename = os.path.expanduser(filename)
-                encoding = d.get('encoding')
-                recurse_state = d.get('recursive')
-                if not encoding_exists(encoding):
-                    if encoding:
-                        log.warning("W: Encoding (%s) not recognized . Falling back to: %s" % (encoding, self.encoding,))
-                    encoding = self.encoding
+        else:
+            textl, stat = get_remote_content_list(filename, encoding)
+            if stat and self.content_cache_remote:
+                self.mdx_include_content_cache_remote[filename] = textl
+        return textl, stat
+        
+    def get_local_content_list(self, filename, encoding):
+        """Get local content list from cache or by reading the file"""
+        if self.content_cache_local and filename in self.mdx_include_content_cache_local:
+            textl = self.mdx_include_content_cache_local[filename]
+            stat = True
+        else:
+            textl, stat = get_local_content_list(filename, encoding)
+            if stat and self.content_cache_local:
+                self.mdx_include_content_cache_local[filename] = textl
+        return textl, stat
+    
+    def get_recursive_content_list(self, textl, filename, parent, recursive, recurse_state):
+        if recursive:
+            if recurse_state != self.syntax_recurs_off:
+                textl = self.mdx_include_get_cyclic_safe_processed_line_list(textl, filename, parent)
+        elif recursive is None:
+            # it's in a neutral position, check recursive state
+            if recurse_state == self.syntax_recurs_on:
+                textl = self.mdx_include_get_cyclic_safe_processed_line_list(textl, filename, parent)
+        return textl
+
+    def mdx_include_get_processed_lines(self, lines, parent):
+        """Process each line and return the processed lines"""
+        new_lines = []
+        for line in lines:
+            resll = []
+            c = 0 # current offset
+            ms = self.compiled_re.finditer(line)
+            for m in ms:
+                textl = []
+                stat = True
+                total_match = m.group(0)
+                d = m.groupdict()
+                escape = d.get('escape')
+                if not escape:
+                    filename = d.get('path')
+                    filename = os.path.expanduser(filename)
+                    encoding = d.get('encoding')
+                    recurse_state = d.get('recursive')
+                    if not encoding_exists(encoding):
+                        if encoding:
+                            log.warning("W: Encoding (%s) not recognized . Falling back to: %s" % (encoding, self.encoding,))
+                        encoding = self.encoding
+                        
+                    urlo = urlparse(filename)
                     
-                urlo = urlparse(filename)
-                
-                if urlo.netloc:
-                    # remote url
-                    if self.allow_remote:
-                        filename = urlunparse(urlo).rstrip('/')
+                    if urlo.netloc:
+                        # remote url
+                        if self.allow_remote:
+                            filename = urlunparse(urlo).rstrip('/')
+                            
+                            # push the child parent relation
+                            self.cyclic.add(filename, parent)
+                            
+                            #get the content split in lines handling cache
+                            textl, stat = self.get_remote_content_list(filename, encoding)
+                            # We can not cache the whole parsed content after doing all recursive includes
+                            # because some files can be included in non-recursive mode. If we just put the recursive
+                            # content from cache it won't work.
+                            # This if statement must be outside the cache management if statement.
+                            textl = self.get_recursive_content_list(textl, filename, parent, self.recursive_remote, recurse_state)
+                        else:
+                            # If allow_remote and allow_local both is false, then status is false
+                            # so that user still have the option to truncate or not, textl is empty now.
+                            stat = False
+                    elif self.allow_local:
+                        # local file
+                        if not os.path.isabs(filename):
+                            filename = os.path.normpath(os.path.join(self.base_path, filename))
 
                         #push the child parent relation
-                        self.cyclic.append(filename, parent)
-
-                        if self.content_cache_remote and filename in self.mdx_include_content_cache_remote:
-                            text = self.mdx_include_content_cache_remote[filename]
-                            stat = True
-                        else:
-                            text, stat = get_remote_content(filename, encoding)
-                            if stat and self.content_cache_remote:
-                                self.mdx_include_content_cache_remote[filename] = text
+                        self.cyclic.add(filename, parent)
+                        
+                        #get the content split in lines handling cache
+                        textl, stat = self.get_local_content_list(filename, encoding)
                         # We can not cache the whole parsed content after doing all recursive includes
                         # because some files can be included in non-recursive mode. If we just put the recrsive
                         # content from cache it won't work.
                         # This if statement must be outside the cache management if statement.
-                        if stat and text:
-                            if self.recursive_remote:
-                                if recurse_state != self.syntax_recurs_off:
-                                    text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
-                            elif self.recursive_remote is None:
-                                # it's in a neutral position, check recursive state
-                                if recurse_state == self.syntax_recurs_on:
-                                    text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
+                        textl = self.get_recursive_content_list(textl, filename, parent, self.recursive_local, recurse_state)
                     else:
                         # If allow_remote and allow_local both is false, then status is false
-                        # so that user still have the option to truncate or not, text is empty now.
+                        # so that user still have the option to truncate or not, textl is empty now.
                         stat = False
-                elif self.allow_local:
-                    # local file
-                    if not os.path.isabs(filename):
-                        filename = os.path.normpath(os.path.join(self.base_path, filename))
-
-                    #push the child parent relation
-                    self.cyclic.append(filename, parent)
-
-                    if self.content_cache_local and filename in self.mdx_include_content_cache_local:
-                        text = self.mdx_include_content_cache_local[filename]
-                        stat = True
-                    else:
-                        text, stat = get_local_content(filename, encoding)
-                        if stat and self.content_cache_local:
-                            self.mdx_include_content_cache_local[filename] = text
-                    # We can not cache the whole parsed content after doing all recursive includes
-                    # because some files can be included in non-recursive mode. If we just put the recrsive
-                    # content from cache it won't work.
-                    # This if statement must be outside the cache management if statement.
-                    if stat and text:
-                        if self.recursive_local:
-                            if recurse_state != self.syntax_recurs_off:
-                                text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
-                        elif self.recursive_local is None:
-                            # it's in a neutral position, check recursive state
-                            if recurse_state == self.syntax_recurs_on:
-                                text = self.mdx_include_get_cyclic_safe_processed_line(text, filename, parent)
                 else:
-                    # If allow_remote and allow_local both is false, then status is false
-                    # so that user still have the option to truncate or not, text is empty now.
-                    stat = False
+                    # this one is escaped, gobble up the escape backslash
+                    textl = [total_match[1:]]
+                
+                if not stat and not self.truncate_on_failure:
+                    # get content failed and user wants to retain the include markdown
+                    textl = [total_match]
+                s, e = m.span()
+                if textl:
+                    #textl has at least one element
+                    if resll:
+                        resll[-1] = ''.join([resll[-1], line[c:s], textl[0] ])
+                        resll.extend(textl[1:])
+                    else:
+                        resll.append(''.join([line[c:s], textl[0] ]))
+                        resll.extend(textl[1:])
+                else:
+                    resll.append(line[c:s])
+                # set the current offset to the end offset of this match
+                c = e
+            # All replacements are done, copy the rest of the string
+            if resll:
+                resll[-1] = ''.join([resll[-1], line[c:]])
             else:
-                # this one is escaped, gobble up the escape backslash
-                text = total_match[1:]
-            
-            if not stat and not self.truncate_on_failure:
-                # get content failed and user wants to retain the include markdown
-                text = total_match
-            s, e = m.span()
-            resl = ''.join([resl, line[c:s], text ])
-            # set the current offset to the end offset of this match
-            c = e
-        # All replacements are done, copy the rest of the string
-        resl = ''.join([resl, line[c:]])
-        return resl
+                resll.append(line[c:])
+            new_lines.extend(resll)
+        return new_lines
         
 
     def run(self, lines):
         """Process the list of lines provided and return a modified list"""
         self.cyclic = Cyclic()
-        new_lines = []
-        for line in lines:
-            line = self.mdx_include_get_processed_line(line, '')
-            if line:
-                new_lines.extend(line.splitlines())
-            else:
-                new_lines.append(line)
+        new_lines = self.mdx_include_get_processed_lines(lines, '')
         if self.content_cache_clean_local:
             self.mdx_include_content_cache_clean_local()
         if self.content_cache_clean_remote:

@@ -1,0 +1,10 @@
+<p>Forcing recursive include when recurs_local is set to None: -------------- testi.md --------------</p>
+<p>Including test1.md</p>
+<p><strong>This is test1.md</strong></p>
+<p>Including testm.md</p>
+<p>-------------- testm.md --------------</p>
+<p>This just includes: {! mdx_include/test/testa.md !}</p>
+<p>{! mdx_include/test/testa.md !}
+-------------- testm.md --------------
+ testm.md finally includes test2.md after following through several includes.
+-------------- testi.md --------------</p>
