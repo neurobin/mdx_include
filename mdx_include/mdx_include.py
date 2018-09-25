@@ -129,13 +129,14 @@ class IncludeExtension(markdown.Extension):
             'content_cache_clean_local': [False, 'Whether to clean content cache for local files after processing all the includes.'],
             'content_cache_clean_remote': [False, 'Whether to clean content cache for remote files after processing all the includes.'],
             'allow_circular_inclusion': [False, 'Whether to allow circular inclusion.'],
+            'line_slice_separator': [['',''], 'A list of lines that will be used to separate parts specified by line slice syntax: 1-2,3-4,5 etc.'],
             }
         # ~ super(IncludeExtension, self).__init__(*args, **kwargs)
         # default setConfig does not preserve None when the default config value is a bool (a bug may be or design decision)
         for k, v in configs.items():
             self.setConfig(k, v)
-        
-        self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', self.config['syntax_left'][0], r'(?P<recursive>[', self.config['syntax_recurs_on'][0], self.config['syntax_recurs_off'][0], r'])?\s*(?P<path>.+?)\s*(', self.config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', self.config['syntax_right'][0], ]))
+        # self.compiled_re = r'(?P<escape>\\)?\{!(?P<recursive>[+-])?\s*(?P<path>[^]|[]+?)(\s*\[ln:(?P<lines>[\d.,-]+)\])?\s*(\|\s*(?P<encoding>.+?)\s*)?!\}'
+        self.compiled_re = re.compile( ''.join([r'(?P<escape>\\)?', self.config['syntax_left'][0], r'(?P<recursive>[', self.config['syntax_recurs_on'][0], self.config['syntax_recurs_off'][0], r'])?\s*(?P<path>[^]|[]+?)(\s*\[ln:(?P<lines>[\d.,-]+)\])?\s*(', self.config['syntax_delim'][0], r'\s*(?P<encoding>.+?)\s*)?', self.config['syntax_right'][0], ]))
     
     def setConfig(self, key, value):
         """Sets the config key value pair preserving None value and validating the value type."""
@@ -186,6 +187,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
         self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
         self.allow_circular_inclusion = config['allow_circular_inclusion'][0]
+        self.line_slice_separator = config['line_slice_separator'][0]
         
     
     def mdx_include_content_cache_clean_local(self):
@@ -203,6 +205,108 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
     def mdx_include_get_content_cache_remote(self):
         """Get the cache dict for remote files """
         return self.mdx_include_content_cache_remote
+
+
+    def get_list_of_lines(self, s):
+        """Parse string s and get a list of lists containing file lines
+        
+        List format:
+        
+            [
+            [[start.l, start.c], [end.l, end.c], step]
+            ]
+        """
+        def get_lns_or_lne(n):
+            """The returned list have exactly 2 elements """
+            if n:
+                lns = n.split('.')
+            else:
+                return [None, None]
+            if len(lns) > 2:
+                raise ValueError("Unknown Line/Column number/range (%s) passed in file slice syntax %s" % (n, s,))
+            lns = list(filter(None, lns))
+            lns = [int(x) for x in lns]
+            for i in lns:
+                if i <= 0:
+                    raise ValueError("Line/Column number/range can not be <= 0. Detected %s in file slice syntax %s" % (n, s,))
+            if len(lns) == 1:
+                lns.append(None)
+            elif len(lns) <= 0:
+                raise ValueError("Unknown Line/Column number/range (%s) passed in file slice syntax %s" % (n, s,))
+            return lns
+        
+        ll = []
+        for r in s.split(','):
+            if r:
+                l = r.split('-')
+                if len(l) > 2:
+                    raise ValueError("Unknown Line/Column number/range (%s) passed in file slice syntax %s" % (r, s,))
+                l = [x if x else None for x in l]
+                if len(l) == 1:
+                    lns = get_lns_or_lne(l[0])
+                    lne = [lns[0], None]
+                    step = 1
+                    ll.append([lns, lne, step])
+                elif len(l) == 2:
+                    lns = get_lns_or_lne(l[0])
+                    lne = get_lns_or_lne(l[1])
+                    if lne[0] is None:
+                        step = 1
+                    else:
+                        step = 1 if lns[0] <= lne[0] else -1
+                    ll.append([lns, lne, step])
+                else:
+                    raise ValueError("Unknown Line/Column number/range (%s) passed in file slice syntax %s" % (r, s,))
+        return ll
+
+    
+    def get_zero_index_from_one_index(self, idx):
+        if idx is not None:
+            idx = idx - 1
+        if idx < 0:
+            idx = None
+        return idx
+    
+    def slice_content_list_by_slice_string(self, textl, slice_string):
+        """Take slices of content by slice string (e.g 1,1-4,1.2-4.7 etc.) 
+        
+        textl must not be empty
+        
+        """
+        sidxs = self.get_list_of_lines(slice_string)
+        c = 0
+        new_textl = []
+        for sidx in sidxs:
+            # sidx is of the format: [[start.l, start.c], [end.l, end.c], step]
+            start = sidx[0]
+            start = [self.get_zero_index_from_one_index(x) for x in start]
+            end = sidx[1] # end index is exclusive, we don't need to do -1
+            # because end index is inclusive for us
+            step = sidx[2]
+            if step < 0:
+                # negative step, we need to do -2 for end[0] index
+                end[0] = self.get_zero_index_from_one_index(end[0])
+                end[0] = self.get_zero_index_from_one_index(end[0])
+            if c > 0:
+                new_textl.extend(self.line_slice_separator)
+            c = c + 1
+            now_slice = textl[start[0]:end[0]:step]
+            if now_slice:
+                if now_slice[0] is now_slice[-1]:
+                    cstep = 1 if start[1] <= end[1] or end[1] is None else -1
+                    if cstep < 0:
+                        
+                    now_slice[0] = now_slice[0][start[1]:end[1]:cstep]
+                else:
+                    now_slice[0] = now_slice[0][start[1]:]
+                    now_slice[-1] = now_slice[-1][:end[1]]
+            print(now_slice, start[0], end[0])
+            new_textl.extend(now_slice)
+            print(new_textl)
+            # ~ print(sidx)
+        
+        return new_textl if new_textl else textl
+            
 
     def mdx_include_get_cyclic_safe_processed_line_list(self, textl, filename, parent):
         """Returns recursive text list if cyclic inclusion not detected,
@@ -269,6 +373,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                     filename = os.path.expanduser(filename)
                     encoding = d.get('encoding')
                     recurse_state = d.get('recursive')
+                    file_lines = d.get('lines')
                     if not encoding_exists(encoding):
                         if encoding:
                             log.warning("W: Encoding (%s) not recognized . Falling back to: %s" % (encoding, self.encoding,))
@@ -286,6 +391,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                             
                             #get the content split in lines handling cache
                             textl, stat = self.get_remote_content_list(filename, encoding)
+                            
+                            # if slice sytax is found, slice the content, we must do it before going recursive because we don't
+                            # want to be recursive on unnecessary parts of the file.
+                            if file_lines:
+                                textl = self.slice_content_list_by_slice_string(textl, file_lines)
+                            
                             # We can not cache the whole parsed content after doing all recursive includes
                             # because some files can be included in non-recursive mode. If we just put the recursive
                             # content from cache it won't work.
@@ -305,6 +416,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                         
                         #get the content split in lines handling cache
                         textl, stat = self.get_local_content_list(filename, encoding)
+                            
+                        # if slice sytax is found, slice the content, we must do it before going recursive because we don't
+                        # want to be recursive on unnecessary parts of the file.
+                        if file_lines:
+                            textl = self.slice_content_list_by_slice_string(textl, file_lines)
+
                         # We can not cache the whole parsed content after doing all recursive includes
                         # because some files can be included in non-recursive mode. If we just put the recrsive
                         # content from cache it won't work.

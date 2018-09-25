@@ -245,11 +245,32 @@ This is a test with circular inclusion
     # ~ print(html)
     assert(html == output.strip())
 
+def test_file_slice():
+    text = r"""
+This is a test with file slice syntax
+
+{! testfls.md [ln:4.6-4.3] !}
+
+    """.strip()
+    output = get_file_content('mdx_include/test/tfls.html')
+    configs = {
+                'mdx_include': {
+                    'base_path': 'mdx_include/test/',
+                    'allow_circular_inclusion': True,
+                },
+            }
+    md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+    html = md.convert(text)
+    print(html)
+    # ~ assert(html == output.strip())
+    
+
 if __name__ == "__main__":
-    test_default()
-    test_non_existent()
-    test_config()
-    test_manual_cache()
-    test_cache()
-    test_recurs()
-    test_cyclic()
+    # ~ test_default()
+    # ~ test_non_existent()
+    # ~ test_config()
+    # ~ test_manual_cache()
+    # ~ test_cache()
+    # ~ test_recurs()
+    # ~ test_cyclic()
+    test_file_slice()
