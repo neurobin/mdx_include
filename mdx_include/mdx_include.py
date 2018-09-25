@@ -64,6 +64,17 @@ def get_remote_content(url, encoding='utf-8'):
         log.exception("E: Failed to download: " + url)
         return '', False
 
+def get_local_content(filename, encoding):
+    """Return the file content with status"""
+    text = ''
+    stat = False
+    try:
+        with open(filename, 'r', encoding=encoding) as f:
+            text = f.read()
+            stat = True
+    except Exception as e:
+        log.exception('E: Could not find file: {}'.format(filename,))
+    return text, stat
 
 class Cyclic(object):
     """A class to handle cyclic relations.
@@ -274,17 +285,9 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                         text = self.mdx_include_content_cache_local[filename]
                         stat = True
                     else:
-                        try:
-                            with open(filename, 'r', encoding=encoding) as f:
-                                text = f.read()
-                                stat = True
-                                if self.content_cache_local:
-                                    self.mdx_include_content_cache_local[filename] = text
-                        except Exception as e:
-                            log.exception('E: Could not find file: {}'.format(filename,))
-                            # Do not break or continue, think of current offset, it must be
-                            # set to end offset after replacing the matched part
-                            stat = False
+                        text, stat = get_local_content(filename, encoding)
+                        if stat and self.content_cache_local:
+                            self.mdx_include_content_cache_local[filename] = text
                     # We can not cache the whole parsed content after doing all recursive includes
                     # because some files can be included in non-recursive mode. If we just put the recrsive
                     # content from cache it won't work.
