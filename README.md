@@ -6,6 +6,8 @@ This project is motivated by [markdown-include](https://github.com/cmacmackin/ma
 
 Inclusion for local file is by default recursive and for remote file non-recursive. You can change this behavior through configuration.
 
+You can include part of the file by slicing according to line/column number.
+
 File/Downloaded contents are cached, i.e if you include same file multiple times in multiple places, they won't be read/downloaded more than once. This behavior can also be changed with configuration.
 
 Circular inclusion by default raises an exception. You can change this behavior to include the affected files in non-recursive mode through configuration.
@@ -19,6 +21,7 @@ Circular inclusion by default raises an exception. You can change this behavior 
 3. **With recurs_state on:** `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
 4. **With recurs_state off:** `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
 5. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
+6. *File slice:* You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing.
 
 
 **General syntax:** `{!recurs_state file_path_or_url | encoding !}`
@@ -105,6 +108,7 @@ Config param | Default | Details
 `content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
 `content_cache_clean_remote` | `False` | Whether to clean content cache for remote files after processing all the includes
 `allow_circular_inclusion` | `False` | Whether to allow circular inclusion. If allowed, the affected files will be included in non-recursive mode, otherwise it will raise an exception.
+`line_slice_separator` | `['','']` | A list of lines that will be used to separate parts specified by line slice syntax: 1-2,3-4,5 etc.
 
 ## Example with configuration
 
@@ -139,6 +143,29 @@ md = markdown.Markdown(extensions=['mdx_include'], extension_configs=configs)
 html = md.convert(text)
 print(html)
 ```
+
+# File slicing
+
+You can include part of the file from certain line/column number to certain line/column number.
+
+The general file slice syntax is: `[ln:l.c-l.c,l.c-l.c,...]`, where l is the line number and c is the column number. All indexes are inclusive.
+
+Examples:
+
+Slice | Details
+----- | -------
+`[ln:1-4]` | line 1 to 4 (both inclusive)
+`[ln:1.2-3.4]` | character 2 in line 1 from character 4 in line 3
+`[ln:2-]` | line 2 to all of the rest
+`[ln:-3]` | Last line to 3rd line (reversion)
+`[ln:6-2]` | 6th line to 2nd line (reversion)
+`[ln:2.9-2.2]` | From 9th character of line 2 to 2nd character of line 2 (string reverse)
+`[ln:.3-.10]` | Slice along the column from every row, from 3rd character to 10th character
+`[ln:2]` | line 2 only
+
+Multiple slicing can be done by adding more slice expressions with commas (s`,`). In this case, a separator (default is two newlines) is inserted between each slice. For example, with slice expression `1-2,4-9`, two newlines will be inserted between the lines 1-2 and 4-9.
+
+More details on the [rcslice doc](https://github.com/neurobin/rcslice)
 
 # Manual cache control
 
