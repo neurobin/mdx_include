@@ -21,10 +21,10 @@ Circular inclusion by default raises an exception. You can change this behavior 
 3. **With recurs_state on:** `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
 4. **With recurs_state off:** `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
 5. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
-6. *File slice:* You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing.
+6. **File slice:** You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing).
 
 
-**General syntax:** `{!recurs_state file_path_or_url | encoding !}`
+**General syntax:** `{!recurs_state file_path_or_url [ln:slice_syntax] | encoding !}`
 
 > The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`)
 
@@ -150,7 +150,7 @@ You can include part of the file from certain line/column number to certain line
 
 The general file slice syntax is: `[ln:l.c-l.c,l.c-l.c,...]`, where l is the line number and c is the column number. All indexes are inclusive.
 
-Examples:
+**Examples:**
 
 Slice | Details
 ----- | -------
