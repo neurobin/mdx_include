@@ -34,6 +34,7 @@ except ImportError:
     from urllib2 import HTTPRedirectHandler
     from urllib2 import build_opener
 from rcslice import RowSlice
+from cyclic import Cyclic
 from . import version
 
 __version__ = version.__version__
@@ -77,36 +78,6 @@ def get_local_content_list(filename, encoding):
         log.exception('E: Could not find file: {}'.format(filename,))
     return textl, stat
 
-class Cyclic(object):
-    """A class to handle cyclic relations.
-    """
-
-    def __init__(self):
-        self.root = {}
-
-    def is_cyclic(self, child):
-        """Return True if child has any cyclic relation otherwise return False"""
-        if child in self.root:
-            if child in self.root[child]:
-                return True
-            else:
-                for parent in self.root[child]:
-                    if parent in self.root and child in self.root[parent]:
-                        return True
-        return False
-
-    def add(self, child, parent):
-        """Add to root a relation like child > parent """
-        parentl = set([parent]) if parent else set()
-
-        if child in self.root:
-            self.root[child].update(parentl)
-        else:
-            self.root[child] = parentl
-        
-        if parent in self.root:
-            # parent's parents are also the child's parents
-            self.root[child].update(self.root[parent])
 
 class IncludeExtension(markdown.Extension):
     """Include Extension class for markdown"""
@@ -297,7 +268,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                             # if slice sytax is found, slice the content, we must do it before going recursive because we don't
                             # want to be recursive on unnecessary parts of the file.
                             if file_lines:
-                                textl = self.row_slice.slice_list_of_sliceables(textl, file_lines)
+                                textl = self.row_slice.slice(textl, file_lines)
                             
                             # We can not cache the whole parsed content after doing all recursive includes
                             # because some files can be included in non-recursive mode. If we just put the recursive
@@ -322,7 +293,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                         # if slice sytax is found, slice the content, we must do it before going recursive because we don't
                         # want to be recursive on unnecessary parts of the file.
                         if file_lines:
-                            textl = self.row_slice.slice_list_of_sliceables(textl, file_lines)
+                            textl = self.row_slice.slice(textl, file_lines)
 
                         # We can not cache the whole parsed content after doing all recursive includes
                         # because some files can be included in non-recursive mode. If we just put the recrsive
