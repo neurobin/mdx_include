@@ -162,6 +162,7 @@ Slice | Details
 `[ln:2.9-2.2]` | From 9th character of line 2 to 2nd character of line 2 (string reverse)
 `[ln:.3-.10]` | Slice along the column from every row, from 3rd character to 10th character
 `[ln:2]` | line 2 only
+`[ln:e]` | last line
 
 Multiple slicing can be done by adding more slice expressions with commas (s`,`). In this case, a separator (default is two newlines) is inserted between each slice. For example, with slice expression `1-2,4-9`, two newlines will be inserted between the lines 1-2 and 4-9.
 

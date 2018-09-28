@@ -124,8 +124,9 @@ class IncludeExtension(markdown.Extension):
                 raise TypeError("E: The type ({}) of the value ({}) does not match with the required type ({}) for the key {}.".format(type(value), value, type(self.config[key][0]), key))
         self.config[key][0] = value
 
-    def extendMarkdown(self, md, md_globals):
-        md.preprocessors.add( 'mdx_include', IncludePreprocessor(md, self.config, self.compiled_re),'_begin')
+    def extendMarkdown(self, md):
+        # ~ md.preprocessors.add( 'mdx_include', IncludePreprocessor(md, self.config, self.compiled_re),'_begin')
+        md.preprocessors.register(IncludePreprocessor(md, self.config, self.compiled_re), 'mdx_include', 101)
 
 
 class IncludePreprocessor(markdown.preprocessors.Preprocessor):
@@ -150,10 +151,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.syntax_recurs_off = config['syntax_recurs_off'][0]
         self.mdx_include_content_cache_local = {} # key = file_path_or_url, value = content
         self.mdx_include_content_cache_remote = {} # key = file_path_or_url, value = content
-        self.markdown.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
-        self.markdown.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
-        self.markdown.mdx_include_get_content_cache_local = self.mdx_include_get_content_cache_local
-        self.markdown.mdx_include_get_content_cache_remote = self.mdx_include_get_content_cache_remote
+        self.md.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
+        self.md.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
+        self.md.mdx_include_get_content_cache_local = self.mdx_include_get_content_cache_local
+        self.md.mdx_include_get_content_cache_remote = self.mdx_include_get_content_cache_remote
         self.content_cache_local = config['content_cache_local'][0]
         self.content_cache_remote = config['content_cache_remote'][0]
         self.content_cache_clean_local = config['content_cache_clean_local'][0]
