@@ -39,6 +39,7 @@ from . import version
 
 __version__ = version.__version__
 
+MARKDOWN_MAJOR = markdown.version_info[0]
 
 logging.basicConfig()
 LOGGER_NAME = 'mdx_include-' + __version__
@@ -124,9 +125,11 @@ class IncludeExtension(markdown.Extension):
                 raise TypeError("E: The type ({}) of the value ({}) does not match with the required type ({}) for the key {}.".format(type(value), value, type(self.config[key][0]), key))
         self.config[key][0] = value
 
-    def extendMarkdown(self, md):
-        # ~ md.preprocessors.add( 'mdx_include', IncludePreprocessor(md, self.config, self.compiled_re),'_begin')
-        md.preprocessors.register(IncludePreprocessor(md, self.config, self.compiled_re), 'mdx_include', 101)
+    def extendMarkdown(self, *args):
+        if MARKDOWN_MAJOR == 2:
+            args[0].preprocessors.add( 'mdx_include', IncludePreprocessor(args[0], self.config, self.compiled_re),'_begin')
+        else:
+            args[0].preprocessors.register(IncludePreprocessor(args[0], self.config, self.compiled_re), 'mdx_include', 101)
 
 
 class IncludePreprocessor(markdown.preprocessors.Preprocessor):
@@ -138,6 +141,10 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
     All file names are relative to the location from which Markdown is being called.
     '''
     def __init__(self, md, config, compiled_regex):
+        md.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
+        md.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
+        md.mdx_include_get_content_cache_local = self.mdx_include_get_content_cache_local
+        md.mdx_include_get_content_cache_remote = self.mdx_include_get_content_cache_remote
         super(IncludePreprocessor, self).__init__(md)
         self.compiled_re = compiled_regex
         self.base_path = config['base_path'][0]
@@ -151,10 +158,6 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.syntax_recurs_off = config['syntax_recurs_off'][0]
         self.mdx_include_content_cache_local = {} # key = file_path_or_url, value = content
         self.mdx_include_content_cache_remote = {} # key = file_path_or_url, value = content
-        self.md.mdx_include_content_cache_clean_local = self.mdx_include_content_cache_clean_local
-        self.md.mdx_include_content_cache_clean_remote = self.mdx_include_content_cache_clean_remote
-        self.md.mdx_include_get_content_cache_local = self.mdx_include_get_content_cache_local
-        self.md.mdx_include_get_content_cache_remote = self.mdx_include_get_content_cache_remote
         self.content_cache_local = config['content_cache_local'][0]
         self.content_cache_remote = config['content_cache_remote'][0]
         self.content_cache_clean_local = config['content_cache_clean_local'][0]

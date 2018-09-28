@@ -42,5 +42,5 @@ setup(name="mdx_include",
         'Topic :: Text Processing :: Filters',
         'Topic :: Text Processing :: Markup',
       ],
-      install_requires=["Markdown>=3.0", "rcslice>=1.1.0", "cyclic"],
+      install_requires=["Markdown>=2.6", "rcslice>=1.1.0", "cyclic"],
 test_suite="mdx_include.test.test")
