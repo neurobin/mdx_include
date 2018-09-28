@@ -269,6 +269,28 @@ This is a test with file slice syntax
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
+
+
+    def test_relative_include(self):
+        text = r"""
+This is a test with relative include
+
+{! mdx_include/test/c.md !}
+
+{! mdx_include/test/md/b.md !}
+
+        """.strip()
+        output = get_file_content('mdx_include/test/trl.html')
+        configs = {
+                    'mdx_include': {
+                        'allow_circular_inclusion': True,
+                        'recursive_relative_path': True,
+                    },
+                }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        html = md.convert(text)
+        # ~ print(html)
+        self.assertEqual(html, output.strip())
     
 
 if __name__ == "__main__":

@@ -109,6 +109,7 @@ Config param | Default | Details
 `content_cache_clean_remote` | `False` | Whether to clean content cache for remote files after processing all the includes
 `allow_circular_inclusion` | `False` | Whether to allow circular inclusion. If allowed, the affected files will be included in non-recursive mode, otherwise it will raise an exception.
 `line_slice_separator` | `['','']` | A list of lines that will be used to separate parts specified by line slice syntax: 1-2,3-4,5 etc.
+`recursive_relative_path` | `True` | Whether include paths inside recursive files should be relative to the parent file path
 
 ## Example with configuration
 

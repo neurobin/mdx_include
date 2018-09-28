@@ -103,6 +103,7 @@ class IncludeExtension(markdown.Extension):
             'content_cache_clean_remote': [False, 'Whether to clean content cache for remote files after processing all the includes.'],
             'allow_circular_inclusion': [False, 'Whether to allow circular inclusion.'],
             'line_slice_separator': [['',''], 'A list of lines that will be used to separate parts specified by line slice syntax: 1-2,3-4,5 etc.'],
+            'recursive_relative_path': [False, 'Whether include paths inside recursive files should be relative to the parent file path'],
             }
         # ~ super(IncludeExtension, self).__init__(*args, **kwargs)
         # default setConfig does not preserve None when the default config value is a bool (a bug may be or design decision)
@@ -164,6 +165,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         self.content_cache_clean_remote = config['content_cache_clean_remote'][0]
         self.allow_circular_inclusion = config['allow_circular_inclusion'][0]
         self.line_slice_separator = config['line_slice_separator'][0]
+        self.recursive_relative_path = config['recursive_relative_path'][0]
         
         self.row_slice = RowSlice(self.line_slice_separator)
         
@@ -286,7 +288,11 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                     elif self.allow_local:
                         # local file
                         if not os.path.isabs(filename):
-                            filename = os.path.normpath(os.path.join(self.base_path, filename))
+                            if self.recursive_relative_path and parent:
+                                filename = os.path.normpath(os.path.join(os.path.dirname(parent), filename))
+                            else:
+                                filename = os.path.normpath(os.path.join(self.base_path, filename))
+                                
 
                         #push the child parent relation
                         self.cyclic.add(filename, parent)
