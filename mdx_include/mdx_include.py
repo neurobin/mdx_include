@@ -354,7 +354,7 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
         return new_lines
 
 def makeExtension(*args, **kwargs):  # pragma: no cover
-    return IncludeExtension(*args, **kwargs)
+    return IncludeExtension(kwargs)
 
 if __name__ == "__main__":
     import doctest
