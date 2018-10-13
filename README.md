@@ -156,7 +156,7 @@ The general file slice syntax is: `[ln:l.c-l.c,l.c-l.c,...]`, where l is the lin
 Slice | Details
 ----- | -------
 `[ln:1-4]` | line 1 to 4 (both inclusive)
-`[ln:1.2-3.4]` | character 2 in line 1 from character 4 in line 3
+`[ln:1.2-3.4]` | character 2 in line 1 to character 4 in line 3
 `[ln:2-]` | line 2 to all of the rest
 `[ln:-3]` | Last line to 3rd line (reversion)
 `[ln:6-2]` | 6th line to 2nd line (reversion)
