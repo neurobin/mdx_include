@@ -20,13 +20,14 @@ Circular inclusion by default raises an exception. You can change this behavior 
 2. **With explicit encoding:** `{! file_path_or_url | encoding !}`
 3. **With recurs_state on:** `{!+ file_path_or_url !}` or `{!+ file_path_or_url | encoding !}`. This makes the included file to be able to include other files. This is meaningful only when recursion is set to `None`. If it is set to `False`, this explicit recurs_state defintion can not force recursion. This is a depth 1 recursion, so you can choose which one to recurs and which one to not.
 4. **With recurs_state off:** `{!- file_path_or_url !}` or `{!- file_path_or_url | encoding !}`. This will force not to recurs even when recursion is set to `True`.
-5. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
-6. **File slice:** You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing).
+5. **Applying indentation** `{!> file_path_or_url!}`. This will apply the indentation found in the include line before the include for all the lines in the included file.
+6. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
+7. **File slice:** You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing).
 
 
-**General syntax:** `{!recurs_state file_path_or_url [ln:slice_syntax] | encoding !}`
+**General syntax:** `{!recurs_state apply_indent file_path_or_url [ln:slice_syntax] | encoding !}`
 
-> The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`)
+> The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`). If apply indentation is specified then it must follow recurse_state immediately or the `{!` if recurse_state is not specified. 
 
 
 ## You can change the syntax!!!
@@ -103,6 +104,7 @@ Config param | Default | Details
 `syntax_delim` | `\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`).
 `syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex).
 `syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex).
+`syntax_apply_indent`| `\>`| The character which stands for applying indentation found before the include for the lines included from the files.
 `content_cache_local` | `True` | Whether to cache content for local files.
 `content_cache_remote` | `True` | Whether to cache content for remote files.
 `content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
@@ -128,6 +130,7 @@ configs = {
                 'syntax_delim': r'\|',
                 'syntax_recurs_on': '+',
                 'syntax_recurs_off': '-',
+                'syntax_apply_indent': r'\>',
             },
         }
 
