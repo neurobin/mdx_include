@@ -104,6 +104,7 @@ Config param | Default | Details
 `syntax_delim` | `\\|` | The delimiter that separates encoding from path_or_url. (Used in regex, thus escaped `\|`).
 `syntax_recurs_on` | `+` | The character to specify recurs_state on. (Used in regex).
 `syntax_recurs_off` | `-` | The character to specify recurs_state off. (Used in regex).
+`syntax_apply_indent`| `\>`| The character which stands for applying indentation found before the include for the lines included from the files.
 `content_cache_local` | `True` | Whether to cache content for local files.
 `content_cache_remote` | `True` | Whether to cache content for remote files.
 `content_cache_clean_local` | `False` | Whether to clean content cache for local files after processing all the includes
@@ -111,7 +112,6 @@ Config param | Default | Details
 `allow_circular_inclusion` | `False` | Whether to allow circular inclusion. If allowed, the affected files will be included in non-recursive mode, otherwise it will raise an exception.
 `line_slice_separator` | `['','']` | A list of lines that will be used to separate parts specified by line slice syntax: 1-2,3-4,5 etc.
 `recursive_relative_path` | `False` | Whether include paths inside recursive files should be relative to the parent file path
-`apply_indent`| `\>`| The character which stands for applying indentation found before the include for the lines included from the files.
 
 ## Example with configuration
 
