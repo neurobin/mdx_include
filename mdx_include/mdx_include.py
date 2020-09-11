@@ -249,12 +249,12 @@ class IncludePreprocessor(markdown.preprocessors.Preprocessor):
                 total_match = m.group(0)
                 d = m.groupdict()
                 escape = d.get('escape')
+                apply_indent = d.get('apply_indent')
                 if not escape:
                     filename = d.get('path')
                     filename = os.path.expanduser(filename)
                     encoding = d.get('encoding')
                     recurse_state = d.get('recursive')
-                    apply_indent = d.get('apply_indent')
                     file_lines = d.get('lines')
                     if not encoding_exists(encoding):
                         if encoding:
