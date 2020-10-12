@@ -2,7 +2,7 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-# ~ from codecs import open
+from codecs import open
 import logging
 import markdown
 import unittest
@@ -14,7 +14,7 @@ log = logging.getLogger(LOGGER_NAME)
 def get_file_content(path):
     cont = ''
     try:
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             cont = f.read();
     except Exception as e:
         log.exception("E: could not read file: " + path)
