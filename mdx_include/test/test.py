@@ -2,7 +2,8 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from codecs import open
+# from codecs import open
+# import sys
 import logging
 import markdown
 import unittest
@@ -14,11 +15,21 @@ log = logging.getLogger(LOGGER_NAME)
 def get_file_content(path):
     cont = ''
     try:
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, 'r') as f:
             cont = f.read();
     except Exception as e:
         log.exception("E: could not read file: " + path)
     return cont
+
+def assertEqual(self: unittest.TestCase, html: str, output: str):
+    if tuple(markdown.version_info) >= (3, 3):
+        html = html.replace('ass="language-', 'ass="')
+        html = html.replace('\n\n<p>', '<p>')
+        html = html.replace('\n<p>', '<p>')
+        output = output.replace('\n\n<p>', '<p>')
+        output = output.replace('\n<p>', '<p>')
+    self.assertEqual(html, output)
+
 
 class TestMethods(unittest.TestCase):
 
@@ -49,7 +60,7 @@ Forcing non-recursive include: {!- mdx_include/test/testi.md !}
                             ])
         html = md.convert(text)
         # print(html)
-        self.assertEqual(html, output.strip())
+        assertEqual(self, html, output.strip())
 
     def test_non_existent(self):
         text = """
@@ -121,7 +132,7 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
         md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
-        self.assertEqual(html, output.strip())
+        assertEqual(self, html, output.strip())
 
 
     def test_recurs(self):
@@ -223,7 +234,7 @@ Including a gist:
         md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
-        self.assertEqual(html, output.strip())
+        assertEqual(self, html, output.strip())
         md.mdx_include_content_cache_clean_local()
         md.mdx_include_content_cache_clean_remote()
 
