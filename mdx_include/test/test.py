@@ -21,17 +21,17 @@ def get_file_content(path):
     return cont
 
 class TestMethods(unittest.TestCase):
-    
+
     def test_default(self):
-        text = r""" 
-This is a simple text 
+        text = r"""
+This is a simple text
 
 Including test1.md {! mdx_include/test/test1.md !}
 
 Including test2.md {! mdx_include/test/test2.md | utf-8 !}
 
 Including a gist:
-    
+
 ```python
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
@@ -46,9 +46,9 @@ Forcing non-recursive include: {!- mdx_include/test/testi.md !}
         output = get_file_content('mdx_include/test/t.html')
         md = markdown.Markdown(extensions=[IncludeExtension(),
                             'markdown.extensions.extra',
-                            ]) 
+                            ])
         html = md.convert(text)
-        # ~ print(html)
+        # print(html)
         self.assertEqual(html, output.strip())
 
     def test_non_existent(self):
@@ -63,7 +63,7 @@ Include was here -> {! https://no.no/ !} <- Non existent URL also strips off the
 
         """
         output = get_file_content('mdx_include/test/tne.html')
-        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -78,7 +78,7 @@ Including test1.md {! test1.md !} where base path is set to mdx_include/test/
 Including test2.md {! test2.md | utf-8 !} where base path is set to mdx_include/test/
 
 Including a gist:
-    
+
 ```python
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
@@ -115,10 +115,10 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
                         'content_cache_remote': True,
                         'content_cache_clean_local': False,
                         'content_cache_clean_remote': False,
-                        
+
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -150,10 +150,10 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
                         'content_cache_remote': True,
                         'content_cache_clean_local': False,
                         'content_cache_clean_remote': False,
-                        
+
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -171,10 +171,10 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
         configs = {
                     'mdx_include': {
                         'base_path': 'mdx_include/test/',
-                        
+
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra',]) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra',])
         html = md.convert(text)
         # ~ print(html)
         print(md.mdx_include_get_content_cache_local())
@@ -201,26 +201,26 @@ Including test1.md {! mdx_include/test/test1.md !}
 Including test1.md {! mdx_include/test/test1.md !}
 
 Including a gist:
-    
+
 ```python
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
 
 Including a gist:
-    
+
 ```python
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
 
 Including a gist:
-    
+
 ```python
 {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
 ```
 
     """.strip()
         output = get_file_content('mdx_include/test/tcache.html')
-        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -242,7 +242,7 @@ This is a test with circular inclusion
                         'allow_circular_inclusion': True,
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -265,7 +265,7 @@ This is a test with file slice syntax
                         'allow_circular_inclusion': True,
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -287,11 +287,11 @@ This is a test with relative include
                         'recursive_relative_path': True,
                     },
                 }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra']) 
+        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
-    
+
 
 if __name__ == "__main__":
     unittest.main()
