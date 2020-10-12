@@ -21,7 +21,7 @@ def get_file_content(path):
         log.exception("E: could not read file: " + path)
     return cont
 
-def assertEqual(self: unittest.TestCase, html: str, output: str):
+def assertEqual(self, html, output):
     if tuple(markdown.version_info) >= (3, 3):
         html = html.replace('ass="language-', 'ass="')
         html = html.replace('\n\n<p>', '<p>')
