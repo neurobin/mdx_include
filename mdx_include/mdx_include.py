@@ -39,7 +39,7 @@ from . import version
 
 __version__ = version.__version__
 
-MARKDOWN_MAJOR = markdown.version_info[0]
+MARKDOWN_MAJOR = markdown.__version_info__[0]
 
 logging.basicConfig()
 LOGGER_NAME = 'mdx_include-' + __version__
