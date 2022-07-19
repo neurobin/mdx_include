@@ -22,7 +22,7 @@ def get_file_content(path):
     return cont
 
 def assertEqual(self, html, output):
-    if tuple(markdown.__version_info__) >= (3, 3):
+    if tuple(markdown.__version_info__ if hasattr(markdown, "__version_info__") else markdown.version_info) >= (3, 3):
         html = html.replace('ass="language-', 'ass="')
         html = html.replace('\n\n<p>', '<p>')
         html = html.replace('\n<p>', '<p>')
