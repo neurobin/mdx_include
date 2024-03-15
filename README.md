@@ -118,7 +118,7 @@ Config param | Default | Details
 ```python
 configs = {
             'mdx_include': {
-                'base_path': 'mdx_include/test/',
+                'base_path': 'tests/',
                 'encoding': 'utf-8',
                 'allow_local': True,
                 'allow_remote': True,

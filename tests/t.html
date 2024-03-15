@@ -49,9 +49,9 @@ if __name__ == '__main__':
 <p><strong>This is test1.md</strong></p>
 <p>Including testm.md</p>
 <p>-------------- testm.md --------------</p>
-<p>This just includes: {! mdx_include/test/testa.md !}</p>
+<p>This just includes: {! tests/testa.md !}</p>
 <p>-------------- testa.md --------------</p>
-<p>This just includes: {! mdx_include/test/test2.md !}</p>
+<p>This just includes: {! tests/test2.md !}</p>
 <p><strong>This is test2.md</strong>
 -------------- testa.md --------------</p>
 <p>-------------- testm.md --------------
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 -------------- testi.md --------------</p>
 <p>Forcing non-recursive include: -------------- testi.md --------------</p>
 <p>Including test1.md</p>
-<p>{! mdx_include/test/test1.md !}</p>
+<p>{! tests/test1.md !}</p>
 <p>Including testm.md</p>
-<p>{! mdx_include/test/testm.md !} testm.md finally includes test2.md after following through several includes.
+<p>{! tests/testm.md !} testm.md finally includes test2.md after following through several includes.
 -------------- testi.md --------------</p>

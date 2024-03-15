@@ -37,9 +37,9 @@ class TestMethods(unittest.TestCase):
         text = r"""
 This is a simple text
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test2.md {! mdx_include/test/test2.md | utf-8 !}
+Including test2.md {! tests/test2.md | utf-8 !}
 
 Including a gist:
 
@@ -49,12 +49,12 @@ Including a gist:
 
 Writing the syntax literally: \{! file_path !} (you just escape it with a backslash \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
 
-Recursive include: {! mdx_include/test/testi.md !}
+Recursive include: {! tests/testi.md !}
 
-Forcing non-recursive include: {!- mdx_include/test/testi.md !}
+Forcing non-recursive include: {!- tests/testi.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/t.html')
+        output = get_file_content('tests/t.html')
         md = markdown.Markdown(extensions=[IncludeExtension(),
                             'markdown.extensions.extra',
                             ])
@@ -73,7 +73,7 @@ Non-existent URL:
 Include was here -> {! https://no.no/ !} <- Non existent URL also strips off the include markdown.
 
         """
-        output = get_file_content('mdx_include/test/tne.html')
+        output = get_file_content('tests/tne.html')
         md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
@@ -84,9 +84,9 @@ Include was here -> {! https://no.no/ !} <- Non existent URL also strips off the
         text = r"""
 This is a test with custom configuration
 
-Including test1.md {! test1.md !} where base path is set to mdx_include/test/
+Including test1.md {! test1.md !} where base path is set to tests/
 
-Including test2.md {! test2.md | utf-8 !} where base path is set to mdx_include/test/
+Including test2.md {! test2.md | utf-8 !} where base path is set to tests/
 
 Including a gist:
 
@@ -107,10 +107,10 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
 {! test2.md | Invalid !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tc.html')
+        output = get_file_content('tests/tc.html')
         configs = {
                     'mdx_include': {
-                        'base_path': 'mdx_include/test/',
+                        'base_path': 'tests/',
                         'encoding': 'utf-8',
                         'allow_local': True,
                         'allow_remote': True,
@@ -139,10 +139,10 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
         text = r"""
 
 
-Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
+Forcing recursive include when recurs_local is set to None: {!+ tests/testi.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tr.html')
+        output = get_file_content('tests/tr.html')
         configs = {
                     'mdx_include': {
                         'base_path': '',
@@ -181,7 +181,7 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
     """
         configs = {
                     'mdx_include': {
-                        'base_path': 'mdx_include/test/',
+                        'base_path': 'tests/',
 
                     },
                 }
@@ -192,7 +192,7 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
         prevr = md.mdx_include_get_content_cache_remote()
         html = md.convert("{!test2.md!}")
         print(md.mdx_include_get_content_cache_local())
-        md.mdx_include_get_content_cache_local()['mdx_include/test/test2.md'] = ['modified']
+        md.mdx_include_get_content_cache_local()['tests/test2.md'] = ['modified']
         print(md.convert("{!test2.md!}"))
         self.assertEqual(md.mdx_include_get_content_cache_remote(), prevr)
         md.mdx_include_content_cache_clean_local()
@@ -205,11 +205,11 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
 
 Including the same file should use the content from cache instead of reading them from files every time.
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
 Including a gist:
 
@@ -230,7 +230,7 @@ Including a gist:
 ```
 
     """.strip()
-        output = get_file_content('mdx_include/test/tcache.html')
+        output = get_file_content('tests/tcache.html')
         md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
         html = md.convert(text)
         # ~ print(html)
@@ -246,10 +246,10 @@ This is a test with circular inclusion
 {! testcya.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/testcy.html')
+        output = get_file_content('tests/testcy.html')
         configs = {
                     'mdx_include': {
-                        'base_path': 'mdx_include/test/',
+                        'base_path': 'tests/',
                         'allow_circular_inclusion': True,
                     },
                 }
@@ -269,10 +269,10 @@ This is a test with file slice syntax
 {! testfls.md [ln:1.2-2.13,6.4-2.3] !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tfls.html')
+        output = get_file_content('tests/tfls.html')
         configs = {
                     'mdx_include': {
-                        'base_path': 'mdx_include/test/',
+                        'base_path': 'tests/',
                         'allow_circular_inclusion': True,
                     },
                 }
@@ -286,12 +286,12 @@ This is a test with file slice syntax
         text = r"""
 This is a test with relative include
 
-{! mdx_include/test/c.md !}
+{! tests/c.md !}
 
-{! mdx_include/test/md/b.md !}
+{! tests/md/b.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/trl.html')
+        output = get_file_content('tests/trl.html')
         configs = {
                     'mdx_include': {
                         'allow_circular_inclusion': True,
