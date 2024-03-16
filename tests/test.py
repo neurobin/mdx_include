@@ -9,25 +9,27 @@ import markdown
 import unittest
 from mdx_include.mdx_include import IncludeExtension
 
-LOGGER_NAME = 'mdx_include_test'
+LOGGER_NAME = "mdx_include_test"
 log = logging.getLogger(LOGGER_NAME)
 
+
 def get_file_content(path):
-    cont = ''
+    cont = ""
     try:
-        with open(path, 'r') as f:
-            cont = f.read();
+        with open(path, "r") as f:
+            cont = f.read()
     except Exception as e:
         log.exception("E: could not read file: " + path)
     return cont
 
+
 def assertEqual(self, html, output):
     if tuple(markdown.__version_info__ if hasattr(markdown, "__version_info__") else markdown.version_info) >= (3, 3):
         html = html.replace('ass="language-', 'ass="')
-        html = html.replace('\n\n<p>', '<p>')
-        html = html.replace('\n<p>', '<p>')
-        output = output.replace('\n\n<p>', '<p>')
-        output = output.replace('\n<p>', '<p>')
+        html = html.replace("\n\n<p>", "<p>")
+        html = html.replace("\n<p>", "<p>")
+        output = output.replace("\n\n<p>", "<p>")
+        output = output.replace("\n<p>", "<p>")
     self.assertEqual(html, output)
 
 
@@ -37,9 +39,9 @@ class TestMethods(unittest.TestCase):
         text = r"""
 This is a simple text
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test2.md {! mdx_include/test/test2.md | utf-8 !}
+Including test2.md {! tests/test2.md | utf-8 !}
 
 Including a gist:
 
@@ -49,15 +51,13 @@ Including a gist:
 
 Writing the syntax literally: \{! file_path !} (you just escape it with a backslash \\\{! file_path !} -> this one will show the backslash before the syntax in HTML)
 
-Recursive include: {! mdx_include/test/testi.md !}
+Recursive include: {! tests/testi.md !}
 
-Forcing non-recursive include: {!- mdx_include/test/testi.md !}
+Forcing non-recursive include: {!- tests/testi.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/t.html')
-        md = markdown.Markdown(extensions=[IncludeExtension(),
-                            'markdown.extensions.extra',
-                            ])
+        output = get_file_content("tests/t.html")
+        md = markdown.Markdown(extensions=[IncludeExtension(), "markdown.extensions.extra"])
         html = md.convert(text)
         # print(html)
         assertEqual(self, html, output.strip())
@@ -73,20 +73,19 @@ Non-existent URL:
 Include was here -> {! https://no.no/ !} <- Non existent URL also strips off the include markdown.
 
         """
-        output = get_file_content('mdx_include/test/tne.html')
-        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
+        output = get_file_content("tests/tne.html")
+        md = markdown.Markdown(extensions=[IncludeExtension(), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
-
 
     def test_config(self):
         text = r"""
 This is a test with custom configuration
 
-Including test1.md {! test1.md !} where base path is set to mdx_include/test/
+Including test1.md {! test1.md !} where base path is set to tests/
 
-Including test2.md {! test2.md | utf-8 !} where base path is set to mdx_include/test/
+Including test2.md {! test2.md | utf-8 !} where base path is set to tests/
 
 Including a gist:
 
@@ -107,64 +106,61 @@ Forcing recursive include when recurs_local is set to None: {!+ testi.md !}
 {! test2.md | Invalid !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tc.html')
+        output = get_file_content("tests/tc.html")
         configs = {
-                    'mdx_include': {
-                        'base_path': 'mdx_include/test/',
-                        'encoding': 'utf-8',
-                        'allow_local': True,
-                        'allow_remote': True,
-                        'truncate_on_failure': False,
-                        'recurs_local': None,
-                        'recurs_remote': False,
-                        'syntax_left': r'\{!',
-                        'syntax_right': r'!\}',
-                        'syntax_delim': r'\|',
-                        'syntax_recurs_on': '+',
-                        'syntax_recurs_off': '-',
-                        'content_cache_local': True,
-                        'content_cache_remote': True,
-                        'content_cache_clean_local': False,
-                        'content_cache_clean_remote': False,
-
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
+            "mdx_include": {
+                "base_path": "tests/",
+                "encoding": "utf-8",
+                "allow_local": True,
+                "allow_remote": True,
+                "truncate_on_failure": False,
+                "recurs_local": None,
+                "recurs_remote": False,
+                "syntax_left": r"\{!",
+                "syntax_right": r"!\}",
+                "syntax_delim": r"\|",
+                "syntax_recurs_on": "+",
+                "syntax_recurs_off": "-",
+                "content_cache_local": True,
+                "content_cache_remote": True,
+                "content_cache_clean_local": False,
+                "content_cache_clean_remote": False,
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         assertEqual(self, html, output.strip())
-
 
     def test_recurs(self):
         text = r"""
 
 
-Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test/testi.md !}
+Forcing recursive include when recurs_local is set to None: {!+ tests/testi.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tr.html')
+        output = get_file_content("tests/tr.html")
         configs = {
-                    'mdx_include': {
-                        'base_path': '',
-                        'encoding': 'utf-8',
-                        'allow_local': True,
-                        'allow_remote': True,
-                        'truncate_on_failure': False,
-                        'recurs_local': None,
-                        'recurs_remote': False,
-                        'syntax_left': r'\{!',
-                        'syntax_right': r'!\}',
-                        'syntax_delim': r'\|',
-                        'syntax_recurs_on': '+',
-                        'syntax_recurs_off': '-',
-                        'content_cache_local': True,
-                        'content_cache_remote': True,
-                        'content_cache_clean_local': False,
-                        'content_cache_clean_remote': False,
-
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
+            "mdx_include": {
+                "base_path": "",
+                "encoding": "utf-8",
+                "allow_local": True,
+                "allow_remote": True,
+                "truncate_on_failure": False,
+                "recurs_local": None,
+                "recurs_remote": False,
+                "syntax_left": r"\{!",
+                "syntax_right": r"!\}",
+                "syntax_delim": r"\|",
+                "syntax_recurs_on": "+",
+                "syntax_recurs_off": "-",
+                "content_cache_local": True,
+                "content_cache_remote": True,
+                "content_cache_clean_local": False,
+                "content_cache_clean_remote": False,
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -180,19 +176,18 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
 
     """
         configs = {
-                    'mdx_include': {
-                        'base_path': 'mdx_include/test/',
-
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra',])
+            "mdx_include": {
+                "base_path": "tests/",
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         print(md.mdx_include_get_content_cache_local())
         prevr = md.mdx_include_get_content_cache_remote()
         html = md.convert("{!test2.md!}")
         print(md.mdx_include_get_content_cache_local())
-        md.mdx_include_get_content_cache_local()['mdx_include/test/test2.md'] = ['modified']
+        md.mdx_include_get_content_cache_local()["tests/test2.md"] = ["modified"]
         print(md.convert("{!test2.md!}"))
         self.assertEqual(md.mdx_include_get_content_cache_remote(), prevr)
         md.mdx_include_content_cache_clean_local()
@@ -205,11 +200,11 @@ Forcing recursive include when recurs_local is set to None: {!+ mdx_include/test
 
 Including the same file should use the content from cache instead of reading them from files every time.
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
-Including test1.md {! mdx_include/test/test1.md !}
+Including test1.md {! tests/test1.md !}
 
 Including a gist:
 
@@ -230,14 +225,13 @@ Including a gist:
 ```
 
     """.strip()
-        output = get_file_content('mdx_include/test/tcache.html')
-        md = markdown.Markdown(extensions=[IncludeExtension(), 'markdown.extensions.extra'])
+        output = get_file_content("tests/tcache.html")
+        md = markdown.Markdown(extensions=[IncludeExtension(), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         assertEqual(self, html, output.strip())
         md.mdx_include_content_cache_clean_local()
         md.mdx_include_content_cache_clean_remote()
-
 
     def test_cyclic(self):
         text = r"""
@@ -246,14 +240,14 @@ This is a test with circular inclusion
 {! testcya.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/testcy.html')
+        output = get_file_content("tests/testcy.html")
         configs = {
-                    'mdx_include': {
-                        'base_path': 'mdx_include/test/',
-                        'allow_circular_inclusion': True,
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
+            "mdx_include": {
+                "base_path": "tests/",
+                "allow_circular_inclusion": True,
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
@@ -269,39 +263,62 @@ This is a test with file slice syntax
 {! testfls.md [ln:1.2-2.13,6.4-2.3] !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/tfls.html')
+        output = get_file_content("tests/tfls.html")
         configs = {
-                    'mdx_include': {
-                        'base_path': 'mdx_include/test/',
-                        'allow_circular_inclusion': True,
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
+            "mdx_include": {
+                "base_path": "tests/",
+                "allow_circular_inclusion": True,
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
-
 
     def test_relative_include(self):
         text = r"""
 This is a test with relative include
 
-{! mdx_include/test/c.md !}
+{! tests/c.md !}
 
-{! mdx_include/test/md/b.md !}
+{! tests/md/b.md !}
 
         """.strip()
-        output = get_file_content('mdx_include/test/trl.html')
+        output = get_file_content("tests/trl.html")
         configs = {
-                    'mdx_include': {
-                        'allow_circular_inclusion': True,
-                        'recursive_relative_path': True,
-                    },
-                }
-        md = markdown.Markdown(extensions=[IncludeExtension(configs['mdx_include']), 'markdown.extensions.extra'])
+            "mdx_include": {
+                "allow_circular_inclusion": True,
+                "recursive_relative_path": True,
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "markdown.extensions.extra"])
         html = md.convert(text)
         # ~ print(html)
         self.assertEqual(html, output.strip())
+
+    def test_strip_indent(self):
+        configs = {
+            "mdx_include": {
+                "base_path": "tests/",
+            },
+        }
+        md = markdown.Markdown(extensions=[IncludeExtension(configs["mdx_include"]), "fenced_code"])
+
+        # Test that indentation is removed from docstring snippet
+        text = "{!< testindent.py [ln:6-8] !}"
+        html = md.convert(text)
+        # ~ print(html)
+        output = "<p>Defines an Example object</p>\n<p>This docstring should be sliced from this file and the four leading spaces should be stripped from each line</p>"
+        self.assertEqual(html, output)
+
+        # Test that indentation is removed from a code snippet, so we can add our own and specify the language
+        text = "```python\n{!< testindent.py [ln:13-14] !}\n```"
+        html = md.convert(text)
+        # ~ print(html)
+        output = (
+            '<pre><code class="language-python">def __init__(self, attr1):\n    self.attribute1 = attr1\n</code></pre>'
+        )
+        self.assertEqual(html, output)
 
 
 if __name__ == "__main__":

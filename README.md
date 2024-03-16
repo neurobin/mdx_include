@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/neurobin/mdx_include.svg?branch=release)](https://travis-ci.org/neurobin/mdx_include)
 
-Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at arbitrary positions. 
+Include extension for Python Markdown. It lets you include local or remote (downloadable) files into your markdown at arbitrary positions.
 
 This project is motivated by [markdown-include](https://github.com/cmacmackin/markdown-include) and provides the same functionalities with some extras.
 
@@ -14,6 +14,8 @@ Circular inclusion by default raises an exception. You can change this behavior 
 
 **You should not use markdown-include along with this extension, choose either one, not both.**
 
+---
+
 # Syntax
 
 1. **Simple:** `{! file_path_or_url !}`
@@ -24,13 +26,11 @@ Circular inclusion by default raises an exception. You can change this behavior 
 6. **Escaped syntax:** You can escape it to get the literal. For example, `\{! file_path_or_url !}` will give you literal `{! file_path_or_url !}` and `\\\{! file_path_or_url !}` will give you `\{! file_path_or_url !}`
 7. **File slice:** You can slice a file by line and column number. The syntax is `{! file_path [ln:l.c-l.c,l.c-l.c,...] !}`. No spaces allowed inside file slice syntax `[ln:l.c-l.c,l.c-l.c,]`. See more detals in [File slicing section](#file-slicing).
 
-
 **General syntax:** `{!recurs_state apply_indent file_path_or_url [ln:slice_syntax] | encoding !}`
 
-> The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`). If apply indentation is specified then it must follow recurse_state immediately or the `{!` if recurse_state is not specified. 
+> The spaces are not necessary. They are just to make it look nice :) . No spaces allowed between `{!` and recurs_state (`+-`). If apply indentation is specified then it must follow recurse_state immediately or the `{!` if recurse_state is not specified.
 
-
-## You can change the syntax!!!
+## You can change the syntax
 
 If you don't like the syntax you can change it through configuration.
 
@@ -40,6 +40,7 @@ There might be some complications with the syntax `{!file!}`, for example, confl
 A paragraph
 {!our syntax!}
 ```
+
 would produce:
 
 ```html
@@ -50,8 +51,9 @@ If you really want to avoid this type of collision, find some character sequence
 
 [See the configuration section for details](#configuration)
 
+---
 
-# Install
+# Installation
 
 Install from Pypi:
 
@@ -59,34 +61,7 @@ Install from Pypi:
 pip install mdx_include
 ```
 
-# Usage
-
-```python
-text = r"""
-some text {! test1.md !} some more text {! test2.md | utf-8 !}
-
-Escaping will give you the exact literal \{! some_file !}
-
-If you escape, then the backslash will be removed.
-
-If you want the backslash too, then provide two more: \\\{! some_file !}
-"""
-md = markdown.Markdown(extensions=['mdx_include'])
-html = md.convert(text)
-print(html)
-```
-
-**Example output:**
-
-(*when test1.md contains a single line `**This is test1.md**` and test2.md contains `**This is test2.md**`*)
-
-```html
-<p>some text <strong>This is test1.md</strong> some more text <strong>This is test2.md</strong></p>
-<p>Escaping will give you the exact literal {! some_file !}</p>
-<p>If you escape, then the backslash will be removed.</p>
-<p>If you want the backslash too, then provide two more: \{! some_file !}</p>
-```
-
+---
 
 # Configuration
 
@@ -118,7 +93,7 @@ Config param | Default | Details
 ```python
 configs = {
             'mdx_include': {
-                'base_path': 'mdx_include/test/',
+                'base_path': 'tests/',
                 'encoding': 'utf-8',
                 'allow_local': True,
                 'allow_remote': True,
@@ -148,7 +123,37 @@ html = md.convert(text)
 print(html)
 ```
 
-# File slicing
+---
+
+# Usage
+
+```python
+text = r"""
+some text {! test1.md !} some more text {! test2.md | utf-8 !}
+
+Escaping will give you the exact literal \{! some_file !}
+
+If you escape, then the backslash will be removed.
+
+If you want the backslash too, then provide two more: \\\{! some_file !}
+"""
+md = markdown.Markdown(extensions=['mdx_include'])
+html = md.convert(text)
+print(html)
+```
+
+**Example output:**
+
+(*when test1.md contains a single line `**This is test1.md**` and test2.md contains `**This is test2.md**`*)
+
+```html
+<p>some text <strong>This is test1.md</strong> some more text <strong>This is test2.md</strong></p>
+<p>Escaping will give you the exact literal {! some_file !}</p>
+<p>If you escape, then the backslash will be removed.</p>
+<p>If you want the backslash too, then provide two more: \{! some_file !}</p>
+```
+
+## File slicing
 
 You can include part of the file from certain line/column number to certain line/column number.
 
@@ -172,7 +177,7 @@ Multiple slicing can be done by adding more slice expressions with commas (s`,`)
 
 More details on the [rcslice doc](https://github.com/neurobin/rcslice)
 
-# Manual cache control
+## Manual Cache Control
 
 The configuration gives you enough cache control, but that's not where it ends :). You can do manual cache cleaning instead of letting the extension handle it for itself. First turn the auto cache cleaning off by setting `content_cache_clean_local` and/or `content_cache_clean_remote` to `False` (this is default), then call the cache cleaning function manually on the markdown object whenever you want:
 
@@ -188,7 +193,7 @@ local_cache_dict = md.mdx_include_get_content_cache_local()
 remote_cache_dict = md.mdx_include_get_content_cache_remote()
 ```
 
-# How circular inclusion works
+## How Circular Inclusion Works
 
 Let's say, there are three files, A, B and C. A includes B, B includes C and C inclues A and we are doing recursive include.
 
@@ -200,17 +205,21 @@ If `allow_circular_inclusion` is set to `True`, then it will work like this:
 2. B includes C normally too
 3. C includes A which is a circular inclusion (`C>A>B>C>A>B>C...`). Thus A will be included in non-recursive mode as `allow_circular_inclusion` is set to `True` i.e C will include A literally without parsing A anymore.
 
-# An example of including a gist
+---
+
+# Example
+
+## Including a Gist
 
 The following markdown:
 
+````text
+Including a gist:
 
-    Including a gist:
-        
-    ```python
-    {! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
-    ```
-
+```python
+{! https://gist.github.com/drgarcia1986/3cce1d134c3c3eeb01bd/raw/73951574d6b62a18b4c342235006ff89d299f879/django_hello.py !}
+```
+````
 
 will produce (with fenced code block enabled):
 
@@ -257,3 +266,38 @@ if __name__ == '__main__':
 
 </code></pre>
 ```
+
+---
+
+# Testing
+
+mdx_include uses the native Python unittest framework.
+
+1. Create a virtual environment to isolate the project dependencies
+
+    ```bash
+    pip3 install venv
+    python3 -m venv .venv
+    ```
+
+2. Install the project dependencies
+
+    ```bash
+    python3 setup.py install
+    ```
+
+3. Run the test suite, using one of the three options below
+
+    ```bash
+    # 1. As a script
+    python3 tests/test.py
+
+    # 2. Using setup.py
+    python3 setup.py test
+
+    # 3. With the unittest module
+    python -m unittest discover tests
+    ```
+
+    - The tests will display a variety of error messages but should display `OK` as the last line; this indicates the
+      tests were successful

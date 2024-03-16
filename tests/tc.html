@@ -1,6 +1,6 @@
 <p>This is a test with custom configuration</p>
-<p>Including test1.md <strong>This is test1.md</strong> where base path is set to mdx_include/test/</p>
-<p>Including test2.md <strong>This is test2.md</strong> where base path is set to mdx_include/test/</p>
+<p>Including test1.md <strong>This is test1.md</strong> where base path is set to tests/</p>
+<p>Including test2.md <strong>This is test2.md</strong> where base path is set to tests/</p>
 <p>Including a gist:</p>
 <pre><code class="python"># -*- coding: utf-8 -*-
 
@@ -49,8 +49,8 @@ if __name__ == '__main__':
 <p>Include is here -&gt; {! https://no.no/ !} &lt;- This will produce download failed warning but won't strip off the include markdown because truncate_on_failure is False in the config.</p>
 <p>Forcing recursive include when recurs_local is set to None: -------------- testi.md --------------</p>
 <p>Including test1.md</p>
-<p>{! mdx_include/test/test1.md !}</p>
+<p>{! tests/test1.md !}</p>
 <p>Including testm.md</p>
-<p>{! mdx_include/test/testm.md !} testm.md finally includes test2.md after following through several includes.
+<p>{! tests/testm.md !} testm.md finally includes test2.md after following through several includes.
 -------------- testi.md --------------</p>
 <p><strong>This is test2.md</strong></p>
